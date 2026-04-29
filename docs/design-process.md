@@ -11,7 +11,7 @@ This document describes the step-by-step process followed to design, build and p
 | # | Step | Status |
 |---|------|--------|
 | 1 | Functional Specifications | ✅ Done |
-| 2 | Acceptance Tests | 🔄 In progress |
+| 2 | Acceptance Tests | ✅ Done |
 | 3 | Technical Choices & Best Practices | ⬜ To do |
 | 4 | README & User Documentation | ⬜ To do |
 | 5 | Project Skeleton | ⬜ To do |
