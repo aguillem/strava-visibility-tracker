@@ -12,7 +12,7 @@ This document describes the step-by-step process followed to design, build and p
 |---|------|--------|
 | 1 | Functional Specifications | ✅ Done |
 | 2 | Acceptance Tests | ✅ Done |
-| 3 | Technical Choices & Best Practices | ⬜ To do |
+| 3 | Technical Choices & Best Practices | ✅ Done |
 | 4 | README & User Documentation | ⬜ To do |
 | 5 | Project Skeleton | ⬜ To do |
 | 6 | CI Pipeline (lint, unit tests on commit) | ⬜ To do |
