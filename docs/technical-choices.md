@@ -8,7 +8,7 @@ This document defines the technology stack, project structure, dependencies and 
 
 ## Language & Runtime
 
-**Python 3.12+**
+**Python 3.13+**
 
 Python was chosen for the following reasons:
 - Available natively on Linux and macOS, widely installed on Windows

@@ -30,7 +30,7 @@ The tool detects two types of inconsistencies:
 
 ## Prerequisites
 
-- Python 3.12+
+- Python 3.13+
 - A Strava account with API access enabled
 - A GitHub account (for automated scheduling)
 

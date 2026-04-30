@@ -2,11 +2,11 @@
 name = "strava-visibility-tracker"
 version = "0.1.0"
 description = "Detects Strava activity visibility inconsistencies based on segment personal records"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
