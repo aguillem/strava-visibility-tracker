@@ -1,0 +1,25 @@
+# Environment variables — never commit this file
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Test & coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Generated reports
+strava-visibility-report-*.md
+
+# IDE
+.idea/
+.vscode/
+*.iml
