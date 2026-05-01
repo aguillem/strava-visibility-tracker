@@ -338,16 +338,13 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-05-2 — Missing DATE_FROM in partial mode exits with error
+### AT-05-2 — Missing DATE_FROM in partial mode defaults to last 30 days
 
 **Given** `MODE=partial` and no `DATE_FROM`
 
 **When** the script runs
 
-**Then**:
-- the script exits with a non-zero exit code
-- an error message states that `DATE_FROM` is required when `MODE=partial`
-- no report is generated
+**Then** the script behaves identically to the default mode: activities from the last 30 days are scanned
 
 ---
 

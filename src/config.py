@@ -101,10 +101,11 @@ def load_config() -> Config:
     elif raw_mode == "partial":
         mode = "partial"
         if os.getenv("DATE_FROM") is None:
-            logger.error("DATE_FROM is required when MODE=partial.")
-            sys.exit(1)
-        date_from = _parse_date(os.getenv("DATE_FROM"), "DATE_FROM")
-        date_to = _parse_date(os.getenv("DATE_TO"), "DATE_TO") or today
+            date_from = today - timedelta(days=30)
+            date_to = today
+        else:
+            date_from = _parse_date(os.getenv("DATE_FROM"), "DATE_FROM")
+            date_to = _parse_date(os.getenv("DATE_TO"), "DATE_TO") or today
     else:
         logger.error("Invalid value for MODE: '%s'. Must be 'full' or 'partial'.", raw_mode)
         sys.exit(1)

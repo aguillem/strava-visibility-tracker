@@ -43,11 +43,14 @@ class TestLoadConfig:
         assert config.date_from == date(2024, 1, 1)
         assert config.date_to == date(2024, 3, 31)
 
-    def test_partial_mode_missing_date_from_exits(self, monkeypatch):
+    def test_partial_mode_without_date_from_defaults_to_last_30_days(self, monkeypatch):
         self._set_base_env(monkeypatch)
         monkeypatch.setenv("MODE", "partial")
-        with pytest.raises(SystemExit):
-            load_config()
+        config = load_config()
+        today = date.today()
+        assert config.mode == "partial"
+        assert config.date_from == today - timedelta(days=30)
+        assert config.date_to == today
 
     def test_invalid_mode_exits(self, monkeypatch):
         self._set_base_env(monkeypatch)
