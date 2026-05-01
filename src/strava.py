@@ -109,13 +109,19 @@ def fetch_activities(
         if not page:
             break
 
+        logger.info("Page %d: %d activities received.", params["page"], len(page))
+
         for raw in page:
             sport_type = raw.get("sport_type", raw.get("type", ""))
             if activity_types and sport_type not in activity_types:
                 continue
 
-            logger.debug(
-                "Fetching details for '%s' (%s, id=%d)...", raw["name"], sport_type, raw["id"]
+            logger.info(
+                "[%d] '%s' (%s, %s) — fetching details...",
+                len(all_activities) + 1,
+                raw["name"],
+                sport_type,
+                raw["start_date_local"][:10],
             )
             try:
                 detail = _fetch_activity_detail(access_token, raw["id"])
