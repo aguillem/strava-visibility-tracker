@@ -62,6 +62,28 @@ class TestLoadConfig:
         with pytest.raises(SystemExit):
             load_config()
 
+    def test_partial_mode_without_date_to_defaults_to_today(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.setenv("MODE", "partial")
+        monkeypatch.setenv("DATE_FROM", "2024-01-01")
+        config = load_config()
+        assert config.date_to == date.today()
+
+    def test_invalid_date_format_exits(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.setenv("MODE", "partial")
+        monkeypatch.setenv("DATE_FROM", "not-a-date")
+        with pytest.raises(SystemExit):
+            load_config()
+
+    def test_invalid_date_to_format_exits(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.setenv("MODE", "partial")
+        monkeypatch.setenv("DATE_FROM", "2024-01-01")
+        monkeypatch.setenv("DATE_TO", "not-a-date")
+        with pytest.raises(SystemExit):
+            load_config()
+
     def test_default_mode_is_partial_last_30_days(self, monkeypatch):
         self._set_base_env(monkeypatch)
         config = load_config()

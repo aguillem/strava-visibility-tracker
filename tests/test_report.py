@@ -33,6 +33,10 @@ def _report_data(**kwargs):
 class TestGenerateReport:
     """Tests for generate_report()."""
 
+    def test_full_mode_shows_all_time_date_range(self):
+        report = generate_report(_report_data(mode="full", date_from=None, date_to=None))
+        assert "All time" in report
+
     def test_report_contains_correct_header_metadata(self):
         data = _report_data(
             scanned_count=10,

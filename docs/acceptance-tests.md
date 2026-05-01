@@ -272,7 +272,17 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-04-3 — Report shows "no inconsistencies" message when all activities are consistent
+### AT-04-3 — Full mode report shows "All time" as date range
+
+**Given** `MODE=full`
+
+**When** the script runs
+
+**Then** the report header displays `All time` as the date range (instead of a specific date interval)
+
+---
+
+### AT-04-4 — Report shows "no inconsistencies" message when all activities are consistent
 
 **Given** all scanned activities have consistent visibility
 
@@ -282,7 +292,7 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-04-4 — Report is generated even when no activities match the filters
+### AT-04-5 — Report is generated even when no activities match the filters
 
 **Given** `ACTIVITY_TYPES=Swim` and the athlete has no Swim activities in the date range
 
@@ -294,7 +304,7 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-04-5 — Report filename includes run timestamp
+### AT-04-6 — Report filename includes run timestamp
 
 **When** the script runs at 2024-06-15 08:30:00 UTC
 
@@ -302,7 +312,7 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-04-6 — Console output displays a summary
+### AT-04-7 — Console output displays a summary
 
 **When** the script runs and finds 2 Case A and 1 Case B inconsistencies across 15 scanned activities
 
@@ -354,7 +364,20 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-05-4 — Authentication failure exits with error
+### AT-05-4 — Invalid date format exits with error
+
+**Given** `MODE=partial` and a date parameter (`DATE_FROM` or `DATE_TO`) is set to a value that is not a valid `YYYY-MM-DD` date (e.g. `DATE_FROM=not-a-date` or `DATE_TO=not-a-date`)
+
+**When** the script runs
+
+**Then**:
+- the script exits with a non-zero exit code
+- an error message clearly states which parameter has an invalid format and that the expected format is `YYYY-MM-DD`
+- no report is generated
+
+---
+
+### AT-05-5 — Authentication failure exits with error
 
 **Given** an invalid `STRAVA_REFRESH_TOKEN`
 
@@ -367,7 +390,7 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-05-5 — Rate limit hit exits gracefully
+### AT-05-6 — Rate limit hit exits gracefully
 
 **Given** the Strava API returns a `429 Too Many Requests` response during processing
 
@@ -380,7 +403,20 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-05-6 — Strava API 5xx error retries once then exits
+### AT-05-7 — Strava API returns an unexpected HTTP error code
+
+**Given** the Strava API returns an unexpected non-success HTTP status code (e.g. `403 Forbidden` or `404 Not Found`) on any request
+
+**When** the script runs
+
+**Then**:
+- the script exits with a non-zero exit code
+- an error message includes the HTTP status code received
+- no report is generated
+
+---
+
+### AT-05-8 — Strava API 5xx error retries once then exits
 
 **Given** the Strava API returns a `500` error on a request
 

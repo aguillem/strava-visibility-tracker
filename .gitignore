@@ -23,3 +23,5 @@ strava-visibility-report-*.md
 .idea/
 .vscode/
 *.iml
+coverage.lcov
+.claude/settings.local.json

@@ -103,6 +103,12 @@ class TestFetchActivities:
         with pytest.raises(SystemExit):
             fetch_activities("token", "full", None, None, [])
 
+    @responses.activate
+    def test_exits_on_generic_http_error(self):
+        responses.add(responses.GET, ACTIVITIES_URL, status=403)
+        with pytest.raises(SystemExit):
+            fetch_activities("token", "full", None, None, [])
+
 
 class TestFetchActivityDetail:
     """Tests for _fetch_activity_detail()."""
@@ -121,6 +127,18 @@ class TestFetchActivityDetail:
         detail_url = "https://www.strava.com/api/v3/activities/1"
         responses.add(responses.GET, detail_url, status=500)
         responses.add(responses.GET, detail_url, status=500)
+        with pytest.raises(SystemExit):
+            _fetch_activity_detail("token", 1)
+
+    @responses.activate
+    def test_exits_on_rate_limit(self):
+        responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1", status=429)
+        with pytest.raises(SystemExit):
+            _fetch_activity_detail("token", 1)
+
+    @responses.activate
+    def test_exits_on_generic_http_error(self):
+        responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1", status=404)
         with pytest.raises(SystemExit):
             _fetch_activity_detail("token", 1)
 
