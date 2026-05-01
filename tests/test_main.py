@@ -83,3 +83,44 @@ class TestMain:
         assert "Case A (should be public): 1" in out
         assert "Case B (should be followers only): 1" in out
         assert "Report written to:" in out
+
+    @responses.activate
+    def test_rate_limit_generates_partial_report(self, monkeypatch, tmp_path, capsys):
+        _set_env(monkeypatch)
+        monkeypatch.chdir(tmp_path)
+
+        responses.add(responses.POST, TOKEN_URL, json={"access_token": "token"}, status=200)
+        responses.add(
+            responses.GET,
+            ACTIVITIES_URL,
+            json=[
+                _activity_stub(1, visibility="followers_only", name="Completed Run"),
+                _activity_stub(2, visibility="public", name="Rate Limited Run"),
+            ],
+            status=200,
+        )
+        responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
+        responses.add(
+            responses.GET,
+            "https://www.strava.com/api/v3/activities/1",
+            json=_detail_stub(1, pr=True),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            "https://www.strava.com/api/v3/activities/2",
+            status=429,
+        )
+
+        with patch("main.load_dotenv"):
+            main()
+
+        reports = list(tmp_path.glob("reports/strava-visibility-report-*.md"))
+        assert len(reports) == 1
+        content = reports[0].read_text(encoding="utf-8")
+        assert "Partial report" in content
+        assert "Completed Run" in content
+
+        out = capsys.readouterr().out
+        assert "Activities scanned: 1" in out
+        assert "Report written to:" in out

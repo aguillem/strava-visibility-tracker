@@ -139,9 +139,9 @@ ACTIVITY_TYPES=Run,TrailRun python src/main.py
 MODE=partial DATE_FROM=2024-01-01 ACTIVITY_TYPES=Run,Ride python src/main.py
 ```
 
-The report is generated as a Markdown file in the current directory:
+The report is generated as a Markdown file in the `reports/` subfolder:
 ```
-strava-visibility-report-20240615-083000.md
+reports/strava-visibility-report-20240615-083000.md
 ```
 
 A summary is also printed to the console:
@@ -149,8 +149,13 @@ A summary is also printed to the console:
 Activities scanned: 42
 Case A (should be public): 3
 Case B (should be followers only): 1
-Report generated: strava-visibility-report-20240615-083000.md
+
+Report written to: reports/strava-visibility-report-20240615-083000.md
 ```
+
+### Rate limit handling
+
+The Strava API allows up to 100 read requests per 15 minutes and 1,000 per day. If the limit is reached mid-run, the script does not stop with an error — it generates a **partial report** covering only the activities fetched so far. The report will contain a visible warning banner to indicate that the results are incomplete.
 
 ---
 

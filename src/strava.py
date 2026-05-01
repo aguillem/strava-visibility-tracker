@@ -29,6 +29,13 @@ class Activity:
     has_pr: bool
 
 
+class RateLimitError(Exception):
+    """Raised when the Strava API rate limit is reached mid-fetch."""
+
+    def __init__(self, partial_activities: "list[Activity] | None" = None):
+        self.partial_activities = partial_activities or []
+
+
 def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> str:
     """
     Obtain a fresh access token from the Strava OAuth endpoint.
@@ -90,7 +97,7 @@ def fetch_activities(
 
         if response.status_code == 429:
             logger.error("Strava API rate limit reached. Please wait before running again.")
-            sys.exit(1)
+            raise RateLimitError(all_activities)
 
         if not response.ok:
             logger.error(
@@ -110,7 +117,10 @@ def fetch_activities(
             logger.debug(
                 "Fetching details for '%s' (%s, id=%d)...", raw["name"], sport_type, raw["id"]
             )
-            detail = _fetch_activity_detail(access_token, raw["id"])
+            try:
+                detail = _fetch_activity_detail(access_token, raw["id"])
+            except RateLimitError:
+                raise RateLimitError(all_activities)
 
             all_activities.append(
                 Activity(
@@ -144,7 +154,7 @@ def _fetch_activity_detail(access_token: str, activity_id: int) -> dict:
 
     if response.status_code == 429:
         logger.error("Strava API rate limit reached. Please wait before running again.")
-        sys.exit(1)
+        raise RateLimitError()
 
     if response.status_code >= 500:
         logger.warning(

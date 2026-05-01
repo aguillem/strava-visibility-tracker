@@ -23,6 +23,7 @@ class ReportData:
     scanned_count: int
     case_a: list[Activity]  # has PR but not public
     case_b: list[Activity]  # no PR but public
+    is_partial: bool = False
 
 
 def generate_report(data: ReportData) -> str:
@@ -42,6 +43,16 @@ def generate_report(data: ReportData) -> str:
         "",
         f"Generated: {data.generated_at.isoformat(timespec='seconds')}",
         "",
+    ]
+
+    if data.is_partial:
+        lines += [
+            "> ⚠️ **Partial report** — the Strava API rate limit was reached before all activities"
+            " could be fetched. The results below cover only the activities scanned so far.",
+            "",
+        ]
+
+    lines += [
         f"- Mode: {data.mode}",
         f"- Date range: {date_range}",
         f"- Activity types filter: {types_display}",

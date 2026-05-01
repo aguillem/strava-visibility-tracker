@@ -8,7 +8,13 @@ from datetime import date
 import pytest
 import responses
 
-from strava import _fetch_activity_detail, _has_personal_record, fetch_activities, get_access_token
+from strava import (
+    RateLimitError,
+    _fetch_activity_detail,
+    _has_personal_record,
+    fetch_activities,
+    get_access_token,
+)
 
 TOKEN_URL = "https://www.strava.com/oauth/token"
 ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
@@ -129,10 +135,31 @@ class TestFetchActivities:
         assert len(result) == 5
 
     @responses.activate
-    def test_exits_on_rate_limit(self):
+    def test_raises_rate_limit_error_with_no_activities_fetched_yet(self):
         responses.add(responses.GET, ACTIVITIES_URL, status=429)
-        with pytest.raises(SystemExit):
+        with pytest.raises(RateLimitError) as exc_info:
             fetch_activities("token", "full", None, None, [])
+        assert exc_info.value.partial_activities == []
+
+    @responses.activate
+    def test_raises_rate_limit_error_with_partial_activities_on_detail_429(self):
+        responses.add(responses.GET, ACTIVITIES_URL, json=[_activity_stub(1), _activity_stub(2)], status=200)
+        responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
+        responses.add(
+            responses.GET,
+            "https://www.strava.com/api/v3/activities/1",
+            json=_detail_stub(1),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            "https://www.strava.com/api/v3/activities/2",
+            status=429,
+        )
+        with pytest.raises(RateLimitError) as exc_info:
+            fetch_activities("token", "full", None, None, [])
+        assert len(exc_info.value.partial_activities) == 1
+        assert exc_info.value.partial_activities[0].id == 1
 
     @responses.activate
     def test_exits_on_generic_http_error(self):
@@ -162,9 +189,9 @@ class TestFetchActivityDetail:
             _fetch_activity_detail("token", 1)
 
     @responses.activate
-    def test_exits_on_rate_limit(self):
+    def test_raises_rate_limit_error_on_429(self):
         responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1", status=429)
-        with pytest.raises(SystemExit):
+        with pytest.raises(RateLimitError):
             _fetch_activity_detail("token", 1)
 
     @responses.activate

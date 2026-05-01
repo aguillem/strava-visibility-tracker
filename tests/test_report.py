@@ -100,6 +100,14 @@ class TestGenerateReport:
         assert "STRAVA_REFRESH_TOKEN" not in report
         assert "STRAVA_CLIENT_ID" not in report
 
+    def test_partial_report_contains_warning_banner(self):
+        report = generate_report(_report_data(is_partial=True))
+        assert "Partial report" in report
+
+    def test_complete_report_does_not_contain_warning_banner(self):
+        report = generate_report(_report_data(is_partial=False))
+        assert "Partial report" not in report
+
 
 class TestWriteReport:
     """Tests for write_report()."""

@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from config import load_config
 from report import ReportData, generate_report, print_summary, write_report
-from strava import Activity, fetch_activities, get_access_token
+from strava import Activity, RateLimitError, fetch_activities, get_access_token
 
 logger = logging.getLogger(__name__)
 
@@ -63,13 +63,21 @@ def main() -> None:
         config.strava_client_secret,
         config.strava_refresh_token,
     )
-    activities = fetch_activities(
-        access_token,
-        config.mode,
-        config.date_from,
-        config.date_to,
-        config.activity_types,
-    )
+    is_partial = False
+    try:
+        activities = fetch_activities(
+            access_token,
+            config.mode,
+            config.date_from,
+            config.date_to,
+            config.activity_types,
+        )
+    except RateLimitError as e:
+        activities = e.partial_activities
+        logger.warning(
+            "Rate limit reached after %d activities. Generating partial report.", len(activities)
+        )
+        is_partial = True
     case_a, case_b = classify_activities(activities)
     logger.info("Inconsistencies — Case A: %d | Case B: %d", len(case_a), len(case_b))
 
@@ -83,6 +91,7 @@ def main() -> None:
         scanned_count=len(activities),
         case_a=case_a,
         case_b=case_b,
+        is_partial=is_partial,
     )
 
     content = generate_report(data)

@@ -323,6 +323,26 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
+### AT-04-8 — Partial report contains a warning banner
+
+**Given** the Strava API rate limit was hit during fetching
+
+**When** the report is generated
+
+**Then** the report contains a visible warning banner near the top indicating that the report is partial and that not all activities could be fetched
+
+---
+
+### AT-04-9 — Complete report does not contain a partial warning
+
+**Given** all activities were successfully fetched without hitting the rate limit
+
+**When** the report is generated
+
+**Then** the report does **not** contain any partial report warning
+
+---
+
 ## AT-05 — Error handling
 
 ### AT-05-1 — Invalid MODE value exits with error
@@ -387,16 +407,31 @@ and 10 activities scanned with 3 inconsistencies
 
 ---
 
-### AT-05-6 — Rate limit hit exits gracefully
+### AT-05-6 — Rate limit hit generates a partial report
 
-**Given** the Strava API returns a `429 Too Many Requests` response during processing
+**Given** the Strava API returns a `429 Too Many Requests` response during processing (either on the activity list or on a detail request), and some activities have already been fetched before the limit was hit
 
 **When** the script runs
 
 **Then**:
-- the script exits with a non-zero exit code
-- an error message clearly states that the Strava API rate limit was reached
-- no partial report is generated
+- the script does **not** exit with an error
+- a warning is logged indicating how many activities were fetched before the limit was hit
+- a report is generated covering only the activities fetched so far
+- the report contains a visible warning banner indicating it is a **partial report** and that the rate limit was reached before all activities could be fetched
+- the console summary reflects the number of activities actually scanned
+
+---
+
+### AT-05-6b — Rate limit hit with no activities fetched yet generates an empty partial report
+
+**Given** the Strava API returns a `429 Too Many Requests` response on the very first activity list request (before any activity has been fetched)
+
+**When** the script runs
+
+**Then**:
+- the script does **not** exit with an error
+- a partial report is generated with `Activities scanned: 0`
+- the report contains the partial warning banner
 
 ---
 
