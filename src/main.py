@@ -6,6 +6,7 @@ Entry point and orchestration.
 Detects Strava activity visibility inconsistencies based on segment personal records
 and generates a Markdown report listing activities that should be reviewed.
 """
+
 import logging
 from datetime import datetime
 
@@ -53,7 +54,9 @@ def main() -> None:
     config = load_config()
     date_range = f"{config.date_from} → {config.date_to}" if config.date_from else "all time"
     types_display = ", ".join(config.activity_types) if config.activity_types else "all"
-    logger.info("Mode: %s | Date range: %s | Activity types: %s", config.mode, date_range, types_display)
+    logger.info(
+        "Mode: %s | Date range: %s | Activity types: %s", config.mode, date_range, types_display
+    )
 
     access_token = get_access_token(
         config.strava_client_id,

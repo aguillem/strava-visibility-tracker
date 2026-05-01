@@ -3,6 +3,7 @@ Report generation module.
 
 Builds the Markdown report from the list of inconsistent activities.
 """
+
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -57,7 +58,9 @@ def generate_report(data: ReportData) -> str:
     if data.case_a:
         lines += ["| Name | Date | Type | Link |", "|------|------|------|------|"]
         for a in data.case_a:
-            lines.append(f"| {a.name} | {a.start_date} | {a.activity_type} | {_activity_url(a.id)} |")
+            lines.append(
+                f"| {a.name} | {a.start_date} | {a.activity_type} | {_activity_url(a.id)} |"
+            )
     else:
         lines.append("_No inconsistencies found._")
 
@@ -74,7 +77,9 @@ def generate_report(data: ReportData) -> str:
     if data.case_b:
         lines += ["| Name | Date | Type | Link |", "|------|------|------|------|"]
         for a in data.case_b:
-            lines.append(f"| {a.name} | {a.start_date} | {a.activity_type} | {_activity_url(a.id)} |")
+            lines.append(
+                f"| {a.name} | {a.start_date} | {a.activity_type} | {_activity_url(a.id)} |"
+            )
     else:
         lines.append("_No inconsistencies found._")
 

@@ -2,6 +2,7 @@
 Unit tests for the Strava API client module.
 All HTTP calls are mocked — no real network requests are made.
 """
+
 from datetime import date
 
 import pytest
@@ -13,10 +14,20 @@ TOKEN_URL = "https://www.strava.com/oauth/token"
 ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
 
 
-def _activity_stub(id=1, name="Morning Run", sport_type="Run",
-                   start_date="2024-03-15T08:00:00Z", visibility="public"):
-    return {"id": id, "name": name, "sport_type": sport_type,
-            "start_date_local": start_date, "visibility": visibility}
+def _activity_stub(
+    id=1,
+    name="Morning Run",
+    sport_type="Run",
+    start_date="2024-03-15T08:00:00Z",
+    visibility="public",
+):
+    return {
+        "id": id,
+        "name": name,
+        "sport_type": sport_type,
+        "start_date_local": start_date,
+        "visibility": visibility,
+    }
 
 
 def _detail_stub(id=1, segment_efforts=None):
@@ -32,14 +43,12 @@ class TestGetAccessToken:
 
     @responses.activate
     def test_returns_access_token_on_success(self):
-        responses.add(responses.POST, TOKEN_URL,
-                      json={"access_token": "my_token"}, status=200)
+        responses.add(responses.POST, TOKEN_URL, json={"access_token": "my_token"}, status=200)
         assert get_access_token("id", "secret", "token") == "my_token"
 
     @responses.activate
     def test_exits_on_authentication_failure(self):
-        responses.add(responses.POST, TOKEN_URL,
-                      json={"message": "Unauthorized"}, status=401)
+        responses.add(responses.POST, TOKEN_URL, json={"message": "Unauthorized"}, status=401)
         with pytest.raises(SystemExit):
             get_access_token("id", "bad_secret", "bad_token")
 
@@ -49,36 +58,55 @@ class TestFetchActivities:
 
     @responses.activate
     def test_returns_all_activities_in_full_mode(self):
-        responses.add(responses.GET, ACTIVITIES_URL,
-                      json=[_activity_stub(1), _activity_stub(2)], status=200)
+        responses.add(
+            responses.GET, ACTIVITIES_URL, json=[_activity_stub(1), _activity_stub(2)], status=200
+        )
         responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
         for i in [1, 2]:
-            responses.add(responses.GET,
-                          f"https://www.strava.com/api/v3/activities/{i}",
-                          json=_detail_stub(i), status=200)
+            responses.add(
+                responses.GET,
+                f"https://www.strava.com/api/v3/activities/{i}",
+                json=_detail_stub(i),
+                status=200,
+            )
         result = fetch_activities("token", "full", None, None, [])
         assert len(result) == 2
 
     @responses.activate
     def test_filters_by_date_range_in_partial_mode(self):
-        responses.add(responses.GET, ACTIVITIES_URL,
-                      json=[_activity_stub(1, start_date="2024-02-15T08:00:00Z")], status=200)
+        responses.add(
+            responses.GET,
+            ACTIVITIES_URL,
+            json=[_activity_stub(1, start_date="2024-02-15T08:00:00Z")],
+            status=200,
+        )
         responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
-        responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1",
-                      json=_detail_stub(1), status=200)
+        responses.add(
+            responses.GET,
+            "https://www.strava.com/api/v3/activities/1",
+            json=_detail_stub(1),
+            status=200,
+        )
         result = fetch_activities("token", "partial", date(2024, 1, 1), date(2024, 3, 31), [])
         assert len(result) == 1
         assert result[0].start_date == date(2024, 2, 15)
 
     @responses.activate
     def test_filters_by_activity_type(self):
-        responses.add(responses.GET, ACTIVITIES_URL,
-                      json=[_activity_stub(1, sport_type="Run"),
-                            _activity_stub(2, sport_type="Ride")], status=200)
+        responses.add(
+            responses.GET,
+            ACTIVITIES_URL,
+            json=[_activity_stub(1, sport_type="Run"), _activity_stub(2, sport_type="Ride")],
+            status=200,
+        )
         responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
         # Only the Run activity detail should be fetched
-        responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1",
-                      json=_detail_stub(1), status=200)
+        responses.add(
+            responses.GET,
+            "https://www.strava.com/api/v3/activities/1",
+            json=_detail_stub(1),
+            status=200,
+        )
         result = fetch_activities("token", "full", None, None, ["Run"])
         assert len(result) == 1
         assert result[0].activity_type == "Run"
@@ -91,9 +119,12 @@ class TestFetchActivities:
         responses.add(responses.GET, ACTIVITIES_URL, json=page2, status=200)
         responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
         for i in range(1, 6):
-            responses.add(responses.GET,
-                          f"https://www.strava.com/api/v3/activities/{i}",
-                          json=_detail_stub(i), status=200)
+            responses.add(
+                responses.GET,
+                f"https://www.strava.com/api/v3/activities/{i}",
+                json=_detail_stub(i),
+                status=200,
+            )
         result = fetch_activities("token", "full", None, None, [])
         assert len(result) == 5
 
