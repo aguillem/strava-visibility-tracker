@@ -54,6 +54,26 @@ jobs:
       - name: Publish report to summary
         run: cat reports/strava-visibility-report-*.md >> $GITHUB_STEP_SUMMARY
 
+      - name: Prepare email
+        id: report
+        run: |
+          echo "file=$(ls reports/strava-visibility-report-*.md)" >> $GITHUB_OUTPUT
+          echo "date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Send report by email
+        if: vars.MAIL_TO != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Strava Visibility Report — ${{ steps.report.outputs.date }}"
+          to: ${{ vars.MAIL_TO }}
+          from: Strava Visibility Tracker <${{ secrets.MAIL_USERNAME }}>
+          body: file://${{ steps.report.outputs.file }}
+
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:

@@ -181,7 +181,28 @@ Go to **Settings** → **Secrets and variables** → **Actions** → **Variables
 | `DATE_TO` | `2024-12-31` | End date (partial mode only) |
 | `ACTIVITY_TYPES` | `Run,TrailRun` | Activity types to scan |
 
-### Step 4 — Enable Actions
+### Step 4 — Enable email notifications (optional)
+
+To receive the report by email after each run, add the following in **Settings** → **Secrets and variables** → **Actions**:
+
+**Secrets tab:**
+
+| Secret | Value |
+|--------|-------|
+| `MAIL_USERNAME` | Your Gmail address |
+| `MAIL_PASSWORD` | A Gmail [App Password](https://myaccount.google.com/apppasswords) ¹ |
+
+**Variables tab:**
+
+| Variable | Value |
+|----------|-------|
+| `MAIL_TO` | Recipient email address |
+
+> ¹ An App Password is a 16-character code generated in your Google account. It requires 2-Step Verification to be enabled. Go to **Google Account → Security → 2-Step Verification → App passwords**.
+
+The email is skipped silently if `MAIL_TO` is not set.
+
+### Step 5 — Enable Actions
 
 Go to the **Actions** tab of your fork and enable GitHub Actions if prompted.
 
