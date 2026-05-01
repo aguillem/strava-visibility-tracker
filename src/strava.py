@@ -3,6 +3,7 @@ Strava API client module.
 
 Handles authentication and all data fetching from the Strava API.
 """
+import logging
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -11,6 +12,8 @@ import requests
 
 _TOKEN_URL = "https://www.strava.com/oauth/token"
 _API_BASE = "https://www.strava.com/api/v3"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,6 +35,7 @@ def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> 
     Uses the refresh token grant type.
     Exits with a descriptive error message if authentication fails.
     """
+    logger.info("Requesting access token...")
     response = requests.post(_TOKEN_URL, data={
         "client_id": client_id,
         "client_secret": client_secret,
@@ -39,7 +43,9 @@ def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> 
         "grant_type": "refresh_token",
     })
     if not response.ok:
-        sys.exit(f"Authentication with the Strava API failed (HTTP {response.status_code}).")
+        logger.error("Authentication with the Strava API failed (HTTP %d).", response.status_code)
+        sys.exit(1)
+    logger.info("Access token obtained.")
     return response.json()["access_token"]
 
 
@@ -71,16 +77,20 @@ def fetch_activities(
                 datetime(next_day.year, next_day.month, next_day.day, tzinfo=timezone.utc).timestamp()
             )
 
+    logger.info("Fetching activities (mode=%s)...", mode)
     all_activities = []
 
     while True:
+        logger.info("Fetching page %d...", params["page"])
         response = requests.get(f"{_API_BASE}/athlete/activities", headers=headers, params=params)
 
         if response.status_code == 429:
-            sys.exit("Strava API rate limit reached. Please wait before running again.")
+            logger.error("Strava API rate limit reached. Please wait before running again.")
+            sys.exit(1)
 
         if not response.ok:
-            sys.exit(f"Strava API error (HTTP {response.status_code}) while fetching activities.")
+            logger.error("Strava API error (HTTP %d) while fetching activities.", response.status_code)
+            sys.exit(1)
 
         page = response.json()
         if not page:
@@ -91,6 +101,7 @@ def fetch_activities(
             if activity_types and sport_type not in activity_types:
                 continue
 
+            logger.debug("Fetching details for '%s' (%s, id=%d)...", raw["name"], sport_type, raw["id"])
             detail = _fetch_activity_detail(access_token, raw["id"])
 
             all_activities.append(Activity(
@@ -104,6 +115,8 @@ def fetch_activities(
 
         params["page"] += 1
 
+    count = len(all_activities)
+    logger.info("Fetched %d %s.", count, "activity" if count == 1 else "activities")
     return all_activities
 
 
@@ -120,18 +133,22 @@ def _fetch_activity_detail(access_token: str, activity_id: int) -> dict:
     response = requests.get(url, headers=headers)
 
     if response.status_code == 429:
-        sys.exit("Strava API rate limit reached. Please wait before running again.")
+        logger.error("Strava API rate limit reached. Please wait before running again.")
+        sys.exit(1)
 
     if response.status_code >= 500:
+        logger.warning("Server error (HTTP %d) for activity %d, retrying...", response.status_code, activity_id)
         response = requests.get(url, headers=headers)
         if response.status_code >= 500:
-            sys.exit(
-                f"Strava API returned a server error (HTTP {response.status_code}) "
-                f"for activity {activity_id} after retry."
+            logger.error(
+                "Strava API server error (HTTP %d) for activity %d after retry.",
+                response.status_code, activity_id,
             )
+            sys.exit(1)
 
     if not response.ok:
-        sys.exit(f"Strava API error (HTTP {response.status_code}) for activity {activity_id}.")
+        logger.error("Strava API error (HTTP %d) for activity %d.", response.status_code, activity_id)
+        sys.exit(1)
 
     return response.json()
 

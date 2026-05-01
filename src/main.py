@@ -6,6 +6,7 @@ Entry point and orchestration.
 Detects Strava activity visibility inconsistencies based on segment personal records
 and generates a Markdown report listing activities that should be reviewed.
 """
+import logging
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -13,6 +14,8 @@ from dotenv import load_dotenv
 from config import load_config
 from report import ReportData, generate_report, print_summary, write_report
 from strava import Activity, fetch_activities, get_access_token
+
+logger = logging.getLogger(__name__)
 
 
 def classify_activities(activities: list[Activity]) -> tuple[list[Activity], list[Activity]]:
@@ -40,9 +43,18 @@ def main() -> None:
     5. Generate and write the report
     6. Print summary to console
     """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     load_dotenv()
 
     config = load_config()
+    date_range = f"{config.date_from} → {config.date_to}" if config.date_from else "all time"
+    types_display = ", ".join(config.activity_types) if config.activity_types else "all"
+    logger.info("Mode: %s | Date range: %s | Activity types: %s", config.mode, date_range, types_display)
+
     access_token = get_access_token(
         config.strava_client_id,
         config.strava_client_secret,
@@ -56,6 +68,7 @@ def main() -> None:
         config.activity_types,
     )
     case_a, case_b = classify_activities(activities)
+    logger.info("Inconsistencies — Case A: %d | Case B: %d", len(case_a), len(case_b))
 
     now = datetime.now()
     data = ReportData(

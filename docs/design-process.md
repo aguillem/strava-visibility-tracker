@@ -17,7 +17,7 @@ This document describes the step-by-step process followed to design, build and p
 | 5 | Project Skeleton | ✅ Done |
 | 6 | CI Pipeline (lint, unit tests on commit) | ✅ Done |
 | 7 | Execution Pipeline (scheduled & manual) | ✅ Done |
-| 8 | Code Generation & Unit Tests | ⬜ To do |
+| 8 | Code Generation & Unit Tests | ✅ Done |
 | 9 | Review & Validation (acceptance tests) | ⬜ To do |
 | 10 | Publication & Open Source Release | ⬜ To do |
 

@@ -60,14 +60,17 @@ def load_config() -> Config:
     elif raw_mode == "partial":
         mode = "partial"
         if os.getenv("DATE_FROM") is None:
-            sys.exit("DATE_FROM is required when MODE=partial.")
+            logger.error("DATE_FROM is required when MODE=partial.")
+            sys.exit(1)
         date_from = _parse_date(os.getenv("DATE_FROM"), "DATE_FROM")
         date_to = _parse_date(os.getenv("DATE_TO"), "DATE_TO") or today
     else:
-        sys.exit(f"Invalid value for MODE: '{raw_mode}'. Must be 'full' or 'partial'.")
+        logger.error("Invalid value for MODE: '%s'. Must be 'full' or 'partial'.", raw_mode)
+        sys.exit(1)
 
     if date_from is not None and date_to is not None and date_from > date_to:
-        sys.exit(f"DATE_FROM ({date_from}) must be before or equal to DATE_TO ({date_to}).")
+        logger.error("DATE_FROM (%s) must be before or equal to DATE_TO (%s).", date_from, date_to)
+        sys.exit(1)
 
     return Config(
         mode=mode,
@@ -108,4 +111,5 @@ def _parse_date(raw: str | None, param_name: str) -> date | None:
     try:
         return date.fromisoformat(raw)
     except ValueError:
-        sys.exit(f"Invalid date format for {param_name}: '{raw}'. Expected YYYY-MM-DD.")
+        logger.error("Invalid date format for %s: '%s'. Expected YYYY-MM-DD.", param_name, raw)
+        sys.exit(1)
