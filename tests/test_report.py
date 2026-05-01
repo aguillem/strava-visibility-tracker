@@ -107,7 +107,7 @@ class TestWriteReport:
     def test_filename_includes_timestamp(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         path = write_report("# Report", datetime(2024, 6, 15, 8, 30, 0))
-        assert "strava-visibility-report-20240615-083000" in path
+        assert "reports/strava-visibility-report-20240615-083000" in path
 
 
 class TestPrintSummary:

@@ -4,6 +4,7 @@ Report generation module.
 Builds the Markdown report from the list of inconsistent activities.
 """
 
+import os
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -93,7 +94,8 @@ def write_report(content: str, generated_at: datetime) -> str:
     The filename includes the run timestamp: strava-visibility-report-YYYYMMDD-HHmmss.md
     Returns the path of the generated file.
     """
-    filename = f"strava-visibility-report-{generated_at.strftime('%Y%m%d-%H%M%S')}.md"
+    os.makedirs("reports", exist_ok=True)
+    filename = f"reports/strava-visibility-report-{generated_at.strftime('%Y%m%d-%H%M%S')}.md"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
     return filename

@@ -71,7 +71,7 @@ class TestMain:
         with patch("main.load_dotenv"):
             main()
 
-        reports = list(tmp_path.glob("strava-visibility-report-*.md"))
+        reports = list(tmp_path.glob("reports/strava-visibility-report-*.md"))
         assert len(reports) == 1
         content = reports[0].read_text(encoding="utf-8")
         assert "Case A Run" in content
