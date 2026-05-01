@@ -220,6 +220,7 @@ This project was built with AI assistance. See [docs/ai-transparency.md](docs/ai
 
 ---
 
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE)
