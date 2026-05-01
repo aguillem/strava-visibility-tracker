@@ -96,6 +96,22 @@ class TestLoadConfig:
         assert config.date_to == today
         assert config.date_from == today - timedelta(days=30)
 
+    def test_date_from_without_mode_is_respected(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.setenv("DATE_FROM", "2024-01-01")
+        config = load_config()
+        assert config.mode == "partial"
+        assert config.date_from == date(2024, 1, 1)
+
+    def test_date_from_and_date_to_without_mode_are_respected(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.setenv("DATE_FROM", "2024-01-01")
+        monkeypatch.setenv("DATE_TO", "2024-03-31")
+        config = load_config()
+        assert config.mode == "partial"
+        assert config.date_from == date(2024, 1, 1)
+        assert config.date_to == date(2024, 3, 31)
+
 
 class TestParseActivityTypes:
     """Tests for _parse_activity_types()."""

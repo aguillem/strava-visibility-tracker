@@ -89,16 +89,7 @@ def load_config() -> Config:
     raw_mode = os.getenv("MODE")
     today = date.today()
 
-    if raw_mode is None:
-        # Default: partial scan of the last 30 days
-        mode = "partial"
-        date_from = today - timedelta(days=30)
-        date_to = today
-    elif raw_mode == "full":
-        mode = "full"
-        date_from = None
-        date_to = None
-    elif raw_mode == "partial":
+    if raw_mode is None or raw_mode == "partial":
         mode = "partial"
         if os.getenv("DATE_FROM") is None:
             date_from = today - timedelta(days=30)
@@ -106,6 +97,10 @@ def load_config() -> Config:
         else:
             date_from = _parse_date(os.getenv("DATE_FROM"), "DATE_FROM")
             date_to = _parse_date(os.getenv("DATE_TO"), "DATE_TO") or today
+    elif raw_mode == "full":
+        mode = "full"
+        date_from = None
+        date_to = None
     else:
         logger.error("Invalid value for MODE: '%s'. Must be 'full' or 'partial'.", raw_mode)
         sys.exit(1)

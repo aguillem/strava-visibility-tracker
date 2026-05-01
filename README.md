@@ -124,8 +124,10 @@ MODE=full python src/main.py
 ### Scan a specific date range
 
 ```bash
-MODE=partial DATE_FROM=2024-01-01 DATE_TO=2024-03-31 python src/main.py
+DATE_FROM=2024-01-01 DATE_TO=2024-03-31 python src/main.py
 ```
+
+`MODE=partial` is the default and can be omitted. `DATE_TO` defaults to today if not specified.
 
 ### Filter by activity type
 
@@ -136,7 +138,7 @@ ACTIVITY_TYPES=Run,TrailRun python src/main.py
 ### Combine options
 
 ```bash
-MODE=partial DATE_FROM=2024-01-01 ACTIVITY_TYPES=Run,Ride python src/main.py
+DATE_FROM=2024-01-01 ACTIVITY_TYPES=Run,Ride python src/main.py
 ```
 
 The report is generated as a Markdown file in the `reports/` subfolder:

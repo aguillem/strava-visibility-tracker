@@ -168,6 +168,30 @@ Each test follows this structure:
 
 ---
 
+### AT-02-7 — DATE_FROM without MODE is respected
+
+**Given** `DATE_FROM=2024-01-01` and no `MODE`
+
+**When** the script runs
+
+**Then**:
+- the mode is `partial`
+- activities from 2024-01-01 to today (inclusive) are scanned
+
+---
+
+### AT-02-8 — DATE_FROM and DATE_TO without MODE are both respected
+
+**Given** `DATE_FROM=2024-01-01`, `DATE_TO=2024-03-31`, and no `MODE`
+
+**When** the script runs
+
+**Then**:
+- the mode is `partial`
+- only activities between 2024-01-01 and 2024-03-31 (inclusive) are scanned
+
+---
+
 ### AT-02-5 — DATE_FROM is inclusive
 
 **Given** `MODE=partial`, `DATE_FROM=2024-03-01`, `DATE_TO=2024-03-31`
