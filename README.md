@@ -61,49 +61,39 @@ pip install -r requirements.txt
 2. Create a new application (name and website can be anything)
 3. Note your **Client ID** and **Client Secret**
 
-### Step 2 — Generate your refresh token
-
-This is a one-time manual step. You need a refresh token with the `activity:read_all` scope.
-
-**1. Open the following URL in your browser** (replace `YOUR_CLIENT_ID`):
-
-```
-https://www.strava.com/oauth/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost&approval_prompt=force&scope=activity:read_all
-```
-
-**2. Authorise the application.** You will be redirected to a URL like:
-
-```
-http://localhost/?state=&code=AUTHORIZATION_CODE&scope=...
-```
-
-Copy the `AUTHORIZATION_CODE` from the URL.
-
-**3. Exchange the code for a refresh token** (replace the placeholders):
-
-```bash
-curl -X POST https://www.strava.com/oauth/token \
-  -d client_id=YOUR_CLIENT_ID \
-  -d client_secret=YOUR_CLIENT_SECRET \
-  -d code=AUTHORIZATION_CODE \
-  -d grant_type=authorization_code
-```
-
-The response contains your `refresh_token`. Copy it.
-
-### Step 3 — Create your `.env` file
+### Step 2 — Create your `.env` file
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and fill in your credentials:
+Edit `.env` and fill in your Client ID and Client Secret:
 
 ```
 STRAVA_CLIENT_ID=your_client_id
 STRAVA_CLIENT_SECRET=your_client_secret
-STRAVA_REFRESH_TOKEN=your_refresh_token
+STRAVA_REFRESH_TOKEN=
 ```
+
+### Step 3 — Generate your refresh token
+
+Run the helper script:
+
+```bash
+python src/get_refresh_token.py
+```
+
+It will open your browser on the Strava authorization page. After you authorize the app, your refresh token is printed in the terminal:
+
+```
+Your refresh token:
+
+  STRAVA_REFRESH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Copy this value into your .env file or GitHub secrets.
+```
+
+Copy the value into your `.env` file.
 
 ---
 

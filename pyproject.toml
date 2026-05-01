@@ -24,3 +24,4 @@ addopts = "--cov=src --cov-report=term-missing --cov-report=lcov --cov-fail-unde
 
 [tool.coverage.run]
 source = ["src"]
+omit = ["src/get_refresh_token.py"]
