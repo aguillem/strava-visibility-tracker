@@ -143,7 +143,9 @@ class TestFetchActivities:
 
     @responses.activate
     def test_raises_rate_limit_error_with_partial_activities_on_detail_429(self):
-        responses.add(responses.GET, ACTIVITIES_URL, json=[_activity_stub(1), _activity_stub(2)], status=200)
+        responses.add(
+            responses.GET, ACTIVITIES_URL, json=[_activity_stub(1), _activity_stub(2)], status=200
+        )
         responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
         responses.add(
             responses.GET,
