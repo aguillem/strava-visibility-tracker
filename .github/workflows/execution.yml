@@ -40,10 +40,10 @@ jobs:
           STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
-          INPUT_MODE: ${{ github.event.inputs.mode }}
-          INPUT_DATE_FROM: ${{ github.event.inputs.date_from }}
-          INPUT_DATE_TO: ${{ github.event.inputs.date_to }}
-          INPUT_ACTIVITY_TYPES: ${{ github.event.inputs.activity_types }}
+          INPUT_MODE: ${{ github.event.inputs.mode || vars.MODE }}
+          INPUT_DATE_FROM: ${{ github.event.inputs.date_from || vars.DATE_FROM }}
+          INPUT_DATE_TO: ${{ github.event.inputs.date_to || vars.DATE_TO }}
+          INPUT_ACTIVITY_TYPES: ${{ github.event.inputs.activity_types || vars.ACTIVITY_TYPES }}
         run: |
           [ -n "$INPUT_MODE" ] && export MODE="$INPUT_MODE"
           [ -n "$INPUT_DATE_FROM" ] && export DATE_FROM="$INPUT_DATE_FROM"

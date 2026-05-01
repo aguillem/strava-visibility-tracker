@@ -162,7 +162,7 @@ Fork this repository to your own GitHub account.
 
 ### Step 2 — Add your secrets
 
-Go to your fork → **Settings** → **Secrets and variables** → **Actions** and add:
+Go to your fork → **Settings** → **Secrets and variables** → **Actions** → **Secrets** and add:
 
 | Secret | Value |
 |--------|-------|
@@ -170,17 +170,28 @@ Go to your fork → **Settings** → **Secrets and variables** → **Actions** a
 | `STRAVA_CLIENT_SECRET` | Your Strava client secret |
 | `STRAVA_REFRESH_TOKEN` | Your Strava refresh token |
 
-### Step 3 — Enable Actions
+### Step 3 — Set your personal defaults (optional)
+
+Go to **Settings** → **Secrets and variables** → **Actions** → **Variables** to define default values for the scheduled run. These take precedence over the script defaults and can be overridden at any time via manual trigger.
+
+| Variable | Example value | Description |
+|----------|---------------|-------------|
+| `MODE` | `full` | Scan mode (`full` or `partial`) |
+| `DATE_FROM` | `2023-01-01` | Start date (partial mode only) |
+| `DATE_TO` | `2024-12-31` | End date (partial mode only) |
+| `ACTIVITY_TYPES` | `Run,TrailRun` | Activity types to scan |
+
+### Step 4 — Enable Actions
 
 Go to the **Actions** tab of your fork and enable GitHub Actions if prompted.
 
-The pipeline runs automatically on the **first day of each month**. The generated report is available as a downloadable artifact in the Actions run summary.
+The pipeline runs automatically on the **first day of each month**. The generated report is displayed directly in the Actions run summary and available as a downloadable artifact.
 
 ### Trigger a manual run
 
 1. Go to **Actions** → **Strava Visibility Execution**
 2. Click **Run workflow**
-3. Fill in the optional parameters and click **Run workflow**
+3. Fill in the optional parameters (leave empty to use your repository variables) and click **Run workflow**
 
 ### Change the schedule
 
