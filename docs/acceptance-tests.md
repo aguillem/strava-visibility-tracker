@@ -45,7 +45,7 @@ Each test follows this structure:
 ### AT-01-3 — Activity with no PR and public visibility is reported as Case B
 
 **Given** an activity with:
-- visibility: `public`
+- visibility: `everyone`
 - no segment effort with `pr_rank = 1`
 
 **When** the script runs
@@ -57,7 +57,7 @@ Each test follows this structure:
 ### AT-01-4 — Activity with PR and public visibility is not reported
 
 **Given** an activity with:
-- visibility: `public`
+- visibility: `everyone`
 - at least one segment effort with `pr_rank = 1`
 
 **When** the script runs
@@ -105,7 +105,7 @@ Each test follows this structure:
 ### AT-01-8 — Activity with no segment efforts and public visibility is reported as Case B
 
 **Given** an activity with:
-- visibility: `public`
+- visibility: `everyone`
 - no segment efforts at all
 
 **When** the script runs

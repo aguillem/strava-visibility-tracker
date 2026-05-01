@@ -24,7 +24,7 @@ The tool detects two types of inconsistencies:
 | Case | Situation | What to do |
 |------|-----------|------------|
 | A | Activity is `followers only` or `only me`, but has a PR | Set it to **public** |
-| B | Activity is `public`, but has no PR | Set it to **followers only** |
+| B | Activity is `everyone`, but has no PR | Set it to **followers only** |
 
 ---
 

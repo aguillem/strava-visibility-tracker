@@ -25,7 +25,7 @@ def _activity_stub(
     name="Morning Run",
     sport_type="Run",
     start_date="2024-03-15T08:00:00Z",
-    visibility="public",
+    visibility="everyone",
 ):
     return {
         "id": id,

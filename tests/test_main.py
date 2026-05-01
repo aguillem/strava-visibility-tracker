@@ -13,7 +13,7 @@ ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
 
 
 def _activity_stub(
-    id, visibility="public", sport_type="Run", start_date="2024-03-15T08:00:00Z", name="Morning Run"
+    id, visibility="everyone", sport_type="Run", start_date="2024-03-15T08:00:00Z", name="Morning Run"
 ):
     return {
         "id": id,
@@ -50,7 +50,7 @@ class TestMain:
             ACTIVITIES_URL,
             json=[
                 _activity_stub(1, visibility="followers_only", name="Case A Run"),
-                _activity_stub(2, visibility="public", name="Case B Ride"),
+                _activity_stub(2, visibility="everyone", name="Case B Ride"),
             ],
             status=200,
         )
@@ -95,7 +95,7 @@ class TestMain:
             ACTIVITIES_URL,
             json=[
                 _activity_stub(1, visibility="followers_only", name="Completed Run"),
-                _activity_stub(2, visibility="public", name="Rate Limited Run"),
+                _activity_stub(2, visibility="everyone", name="Rate Limited Run"),
             ],
             status=200,
         )

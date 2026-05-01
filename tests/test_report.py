@@ -14,7 +14,7 @@ def _activity(
     name="Morning Run",
     activity_type="Run",
     start_date=date(2024, 2, 14),
-    visibility="public",
+    visibility="everyone",
     has_pr=False,
 ):
     return Activity(
@@ -79,7 +79,7 @@ class TestGenerateReport:
 
     def test_case_b_section_lists_correct_activities(self):
         activity = _activity(
-            id=987, name="Evening Ride", activity_type="Ride", visibility="public", has_pr=False
+            id=987, name="Evening Ride", activity_type="Ride", visibility="everyone", has_pr=False
         )
         report = generate_report(_report_data(case_b=[activity]))
         assert "Evening Ride" in report
@@ -128,7 +128,7 @@ class TestPrintSummary:
                 _activity(id=1, visibility="followers_only", has_pr=True),
                 _activity(id=2, visibility="only_me", has_pr=True),
             ],
-            case_b=[_activity(id=3, visibility="public", has_pr=False)],
+            case_b=[_activity(id=3, visibility="everyone", has_pr=False)],
         )
         print_summary(data)
         output = capsys.readouterr().out
@@ -153,13 +153,13 @@ class TestClassifyActivities:
         assert a not in case_b
 
     def test_public_without_pr_is_case_b(self):
-        a = _activity(visibility="public", has_pr=False)
+        a = _activity(visibility="everyone", has_pr=False)
         case_a, case_b = classify_activities([a])
         assert a not in case_a
         assert a in case_b
 
     def test_public_with_pr_is_not_reported(self):
-        a = _activity(visibility="public", has_pr=True)
+        a = _activity(visibility="everyone", has_pr=True)
         case_a, case_b = classify_activities([a])
         assert a not in case_a
         assert a not in case_b

@@ -24,12 +24,12 @@ def classify_activities(activities: list[Activity]) -> tuple[list[Activity], lis
     Classify activities into two inconsistency cases.
 
     Case A: has a PR but visibility is followers_only or only_me
-    Case B: no PR but visibility is public
+    Case B: no PR but visibility is everyone
 
     Returns a tuple (case_a, case_b).
     """
     case_a = [a for a in activities if a.has_pr and a.visibility in ("followers_only", "only_me")]
-    case_b = [a for a in activities if not a.has_pr and a.visibility == "public"]
+    case_b = [a for a in activities if not a.has_pr and a.visibility == "everyone"]
     return case_a, case_b
 
 

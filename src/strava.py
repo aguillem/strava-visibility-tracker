@@ -25,7 +25,7 @@ class Activity:
     name: str
     activity_type: str
     start_date: date
-    visibility: str  # "public", "followers_only" or "only_me"
+    visibility: str  # "everyone", "followers_only" or "only_me"
     has_pr: bool
 
 
