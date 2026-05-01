@@ -1,19 +1,30 @@
 """
 Unit tests for the report generation module.
 """
-from datetime import date, datetime
 
-import pytest
+from datetime import date, datetime
 
 from main import classify_activities
 from report import ReportData, generate_report, print_summary, write_report
 from strava import Activity
 
 
-def _activity(id=1, name="Morning Run", activity_type="Run",
-              start_date=date(2024, 2, 14), visibility="public", has_pr=False):
-    return Activity(id=id, name=name, activity_type=activity_type,
-                    start_date=start_date, visibility=visibility, has_pr=has_pr)
+def _activity(
+    id=1,
+    name="Morning Run",
+    activity_type="Run",
+    start_date=date(2024, 2, 14),
+    visibility="public",
+    has_pr=False,
+):
+    return Activity(
+        id=id,
+        name=name,
+        activity_type=activity_type,
+        start_date=start_date,
+        visibility=visibility,
+        has_pr=has_pr,
+    )
 
 
 def _report_data(**kwargs):
@@ -52,8 +63,14 @@ class TestGenerateReport:
         assert "Inconsistencies found: 3" in report
 
     def test_case_a_section_lists_correct_activities(self):
-        activity = _activity(id=123456789, name="Morning Run", activity_type="Run",
-                             start_date=date(2024, 2, 14), visibility="followers_only", has_pr=True)
+        activity = _activity(
+            id=123456789,
+            name="Morning Run",
+            activity_type="Run",
+            start_date=date(2024, 2, 14),
+            visibility="followers_only",
+            has_pr=True,
+        )
         report = generate_report(_report_data(case_a=[activity]))
         assert "Morning Run" in report
         assert "2024-02-14" in report
@@ -61,8 +78,9 @@ class TestGenerateReport:
         assert "123456789" in report
 
     def test_case_b_section_lists_correct_activities(self):
-        activity = _activity(id=987, name="Evening Ride", activity_type="Ride",
-                             visibility="public", has_pr=False)
+        activity = _activity(
+            id=987, name="Evening Ride", activity_type="Ride", visibility="public", has_pr=False
+        )
         report = generate_report(_report_data(case_b=[activity]))
         assert "Evening Ride" in report
         assert "987" in report
@@ -98,8 +116,10 @@ class TestPrintSummary:
     def test_summary_includes_scanned_count_and_case_counts(self, capsys):
         data = _report_data(
             scanned_count=15,
-            case_a=[_activity(id=1, visibility="followers_only", has_pr=True),
-                    _activity(id=2, visibility="only_me", has_pr=True)],
+            case_a=[
+                _activity(id=1, visibility="followers_only", has_pr=True),
+                _activity(id=2, visibility="only_me", has_pr=True),
+            ],
             case_b=[_activity(id=3, visibility="public", has_pr=False)],
         )
         print_summary(data)

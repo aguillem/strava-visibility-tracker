@@ -1,6 +1,7 @@
 """
 Unit tests for the config module.
 """
+
 import logging
 from datetime import date, timedelta
 

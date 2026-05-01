@@ -3,6 +3,7 @@ Configuration module.
 
 Reads, validates and exposes all input parameters from environment variables.
 """
+
 import logging
 import os
 import sys
@@ -12,16 +13,56 @@ from datetime import date, timedelta
 logger = logging.getLogger(__name__)
 
 _KNOWN_ACTIVITY_TYPES = {
-    "AlpineSki", "BackcountrySki", "Badminton", "Canoeing", "Crossfit",
-    "EBikeRide", "Elliptical", "EMountainBikeRide", "Golf", "GravelRide",
-    "Handcycle", "HighIntensityIntervalTraining", "Hike", "IceSkate",
-    "InlineSkate", "Kayaking", "Kitesurf", "MountainBikeRide", "NordicSki",
-    "Pickleball", "Pilates", "Racquetball", "Ride", "RockClimbing",
-    "RollerSki", "Rowing", "Run", "Sail", "Skateboard", "Snowboard",
-    "Snowshoe", "Soccer", "Squash", "StairStepper", "StandUpPaddling",
-    "Surfing", "Swim", "TableTennis", "Tennis", "TrailRun", "Velomobile",
-    "VirtualRide", "VirtualRow", "VirtualRun", "Walk", "WeightTraining",
-    "Wheelchair", "Windsurf", "Workout", "Yoga",
+    "AlpineSki",
+    "BackcountrySki",
+    "Badminton",
+    "Canoeing",
+    "Crossfit",
+    "EBikeRide",
+    "Elliptical",
+    "EMountainBikeRide",
+    "Golf",
+    "GravelRide",
+    "Handcycle",
+    "HighIntensityIntervalTraining",
+    "Hike",
+    "IceSkate",
+    "InlineSkate",
+    "Kayaking",
+    "Kitesurf",
+    "MountainBikeRide",
+    "NordicSki",
+    "Pickleball",
+    "Pilates",
+    "Racquetball",
+    "Ride",
+    "RockClimbing",
+    "RollerSki",
+    "Rowing",
+    "Run",
+    "Sail",
+    "Skateboard",
+    "Snowboard",
+    "Snowshoe",
+    "Soccer",
+    "Squash",
+    "StairStepper",
+    "StandUpPaddling",
+    "Surfing",
+    "Swim",
+    "TableTennis",
+    "Tennis",
+    "TrailRun",
+    "Velomobile",
+    "VirtualRide",
+    "VirtualRow",
+    "VirtualRun",
+    "Walk",
+    "WeightTraining",
+    "Wheelchair",
+    "Windsurf",
+    "Workout",
+    "Yoga",
 }
 
 
