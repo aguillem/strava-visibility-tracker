@@ -13,7 +13,11 @@ ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
 
 
 def _activity_stub(
-    id, visibility="everyone", sport_type="Run", start_date="2024-03-15T08:00:00Z", name="Morning Run"
+    id,
+    visibility="everyone",
+    sport_type="Run",
+    start_date="2024-03-15T08:00:00Z",
+    name="Morning Run",
 ):
     return {
         "id": id,
