@@ -14,17 +14,18 @@ The problem is that managing activity visibility manually is tedious and error-p
 
 ## How it works
 
-The rule is simple:
+The rules are simple:
 
 - 🏆 Activity with a **segment PR** → should be **public**
-- 🙈 Activity with **no segment PR** → should be **followers only**
+- 🏅 Activity tagged as a **race** → should be **public**
+- 🙈 Activity with **no segment PR and not a race** → should be **followers only**
 
 The tool detects two types of inconsistencies:
 
 | Case | Situation | What to do |
 |------|-----------|------------|
 | A | Activity is `followers only` or `only me`, but has a PR | Set it to **public** |
-| B | Activity is `everyone`, but has no PR | Set it to **followers only** |
+| B | Activity is `everyone`, has no PR, and is not a race | Set it to **followers only** |
 
 ---
 

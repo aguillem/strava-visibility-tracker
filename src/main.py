@@ -19,17 +19,24 @@ from strava import Activity, RateLimitError, fetch_activities, get_access_token
 logger = logging.getLogger(__name__)
 
 
+_RACE_WORKOUT_TYPES = frozenset({1, 11})  # run race, ride race
+
+
 def classify_activities(activities: list[Activity]) -> tuple[list[Activity], list[Activity]]:
     """
     Classify activities into two inconsistency cases.
 
     Case A: has a PR but visibility is followers_only or only_me
-    Case B: no PR but visibility is everyone
+    Case B: no PR, not a race, but visibility is everyone
 
     Returns a tuple (case_a, case_b).
     """
     case_a = [a for a in activities if a.has_pr and a.visibility in ("followers_only", "only_me")]
-    case_b = [a for a in activities if not a.has_pr and a.visibility == "everyone"]
+    case_b = [
+        a
+        for a in activities
+        if not a.has_pr and a.workout_type not in _RACE_WORKOUT_TYPES and a.visibility == "everyone"
+    ]
     return case_a, case_b
 
 

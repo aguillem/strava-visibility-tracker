@@ -16,6 +16,7 @@ def _activity(
     start_date=date(2024, 2, 14),
     visibility="everyone",
     has_pr=False,
+    workout_type=0,
 ):
     return Activity(
         id=id,
@@ -24,6 +25,7 @@ def _activity(
         start_date=start_date,
         visibility=visibility,
         has_pr=has_pr,
+        workout_type=workout_type,
     )
 
 
@@ -175,3 +177,21 @@ class TestClassifyActivities:
         case_a, case_b = classify_activities([a])
         assert a not in case_a
         assert a not in case_b
+
+    def test_run_race_public_without_pr_is_not_case_b(self):
+        a = _activity(visibility="everyone", has_pr=False, workout_type=1)
+        case_a, case_b = classify_activities([a])
+        assert a not in case_a
+        assert a not in case_b
+
+    def test_ride_race_public_without_pr_is_not_case_b(self):
+        a = _activity(visibility="everyone", has_pr=False, workout_type=11)
+        case_a, case_b = classify_activities([a])
+        assert a not in case_a
+        assert a not in case_b
+
+    def test_non_race_public_without_pr_is_still_case_b(self):
+        a = _activity(visibility="everyone", has_pr=False, workout_type=0)
+        case_a, case_b = classify_activities([a])
+        assert a not in case_a
+        assert a in case_b

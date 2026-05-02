@@ -42,11 +42,12 @@ Each test follows this structure:
 
 ---
 
-### AT-01-3 — Activity with no PR and public visibility is reported as Case B
+### AT-01-3 — Activity with no PR, not a race, and public visibility is reported as Case B
 
 **Given** an activity with:
 - visibility: `everyone`
 - no segment effort with `pr_rank = 1`
+- not tagged as a race (`workout_type` ≠ 1 and ≠ 11)
 
 **When** the script runs
 
@@ -107,10 +108,37 @@ Each test follows this structure:
 **Given** an activity with:
 - visibility: `everyone`
 - no segment efforts at all
+- not tagged as a race
 
 **When** the script runs
 
 **Then** the activity appears in the report under **Case B — Should be FOLLOWERS ONLY**
+
+---
+
+### AT-01-10 — Run race with no PR and public visibility is not reported
+
+**Given** an activity with:
+- visibility: `everyone`
+- no segment effort with `pr_rank = 1`
+- tagged as a run race (`workout_type = 1`)
+
+**When** the script runs
+
+**Then** the activity does **not** appear in the report (it is correctly public)
+
+---
+
+### AT-01-11 — Ride race with no PR and public visibility is not reported
+
+**Given** an activity with:
+- visibility: `everyone`
+- no segment effort with `pr_rank = 1`
+- tagged as a ride race (`workout_type = 11`)
+
+**When** the script runs
+
+**Then** the activity does **not** appear in the report (it is correctly public)
 
 ---
 

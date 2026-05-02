@@ -27,6 +27,7 @@ class Activity:
     start_date: date
     visibility: str  # "everyone", "followers_only" or "only_me"
     has_pr: bool
+    workout_type: int = 0  # 1 = run race, 11 = ride race
 
 
 class RateLimitError(Exception):
@@ -136,6 +137,7 @@ def fetch_activities(
                     start_date=date.fromisoformat(raw["start_date_local"][:10]),
                     visibility=raw["visibility"],
                     has_pr=_has_personal_record(detail),
+                    workout_type=raw.get("workout_type", 0),
                 )
             )
 
