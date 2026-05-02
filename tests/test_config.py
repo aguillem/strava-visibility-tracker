@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from config import _parse_activity_types, load_config
+from config import ConfigError, _parse_activity_types, load_config
 
 _BASE_ENV = {
     "STRAVA_CLIENT_ID": "123",
@@ -52,18 +52,18 @@ class TestLoadConfig:
         assert config.date_from == today - timedelta(days=30)
         assert config.date_to == today
 
-    def test_invalid_mode_exits(self, monkeypatch):
+    def test_invalid_mode_raises(self, monkeypatch):
         self._set_base_env(monkeypatch)
         monkeypatch.setenv("MODE", "weekly")
-        with pytest.raises(SystemExit):
+        with pytest.raises(ConfigError, match="weekly"):
             load_config()
 
-    def test_date_from_after_date_to_exits(self, monkeypatch):
+    def test_date_from_after_date_to_raises(self, monkeypatch):
         self._set_base_env(monkeypatch)
         monkeypatch.setenv("MODE", "partial")
         monkeypatch.setenv("DATE_FROM", "2024-06-01")
         monkeypatch.setenv("DATE_TO", "2024-01-01")
-        with pytest.raises(SystemExit):
+        with pytest.raises(ConfigError, match="DATE_FROM"):
             load_config()
 
     def test_partial_mode_without_date_to_defaults_to_today(self, monkeypatch):
@@ -73,19 +73,37 @@ class TestLoadConfig:
         config = load_config()
         assert config.date_to == date.today()
 
-    def test_invalid_date_format_exits(self, monkeypatch):
+    def test_invalid_date_format_raises(self, monkeypatch):
         self._set_base_env(monkeypatch)
         monkeypatch.setenv("MODE", "partial")
         monkeypatch.setenv("DATE_FROM", "not-a-date")
-        with pytest.raises(SystemExit):
+        with pytest.raises(ConfigError, match="DATE_FROM"):
             load_config()
 
-    def test_invalid_date_to_format_exits(self, monkeypatch):
+    def test_invalid_date_to_format_raises(self, monkeypatch):
         self._set_base_env(monkeypatch)
         monkeypatch.setenv("MODE", "partial")
         monkeypatch.setenv("DATE_FROM", "2024-01-01")
         monkeypatch.setenv("DATE_TO", "not-a-date")
-        with pytest.raises(SystemExit):
+        with pytest.raises(ConfigError, match="DATE_TO"):
+            load_config()
+
+    def test_missing_client_id_raises(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.delenv("STRAVA_CLIENT_ID")
+        with pytest.raises(ConfigError, match="STRAVA_CLIENT_ID"):
+            load_config()
+
+    def test_missing_client_secret_raises(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.delenv("STRAVA_CLIENT_SECRET")
+        with pytest.raises(ConfigError, match="STRAVA_CLIENT_SECRET"):
+            load_config()
+
+    def test_missing_refresh_token_raises(self, monkeypatch):
+        self._set_base_env(monkeypatch)
+        monkeypatch.delenv("STRAVA_REFRESH_TOKEN")
+        with pytest.raises(ConfigError, match="STRAVA_REFRESH_TOKEN"):
             load_config()
 
     def test_default_mode_is_partial_last_30_days(self, monkeypatch):

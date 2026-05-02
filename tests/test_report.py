@@ -110,6 +110,11 @@ class TestGenerateReport:
         report = generate_report(_report_data(is_partial=False))
         assert "Partial report" not in report
 
+    def test_pipe_in_activity_name_is_escaped(self):
+        activity = _activity(id=1, name="Run | Race", visibility="followers_only", has_pr=True)
+        report = generate_report(_report_data(case_a=[activity]))
+        assert r"Run \| Race" in report
+
 
 class TestWriteReport:
     """Tests for write_report()."""

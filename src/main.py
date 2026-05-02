@@ -9,13 +9,14 @@ and generates a Markdown report listing activities that should be reviewed.
 
 import logging
 import os
+import sys
 from datetime import datetime
 
 from dotenv import load_dotenv
 
-from config import load_config
+from config import ConfigError, load_config
 from report import ReportData, generate_report, print_summary, write_report
-from strava import Activity, RateLimitError, fetch_activities, get_access_token
+from strava import Activity, RateLimitError, StravaAPIError, fetch_activities, get_access_token
 
 logger = logging.getLogger(__name__)
 
@@ -60,18 +61,28 @@ def main() -> None:
     )
     load_dotenv()
 
-    config = load_config()
+    try:
+        config = load_config()
+    except ConfigError as e:
+        logger.error(str(e))
+        sys.exit(1)
+
     date_range = f"{config.date_from} → {config.date_to}" if config.date_from else "all time"
     types_display = ", ".join(config.activity_types) if config.activity_types else "all"
     logger.info(
         "Mode: %s | Date range: %s | Activity types: %s", config.mode, date_range, types_display
     )
 
-    access_token = get_access_token(
-        config.strava_client_id,
-        config.strava_client_secret,
-        config.strava_refresh_token,
-    )
+    try:
+        access_token = get_access_token(
+            config.strava_client_id,
+            config.strava_client_secret,
+            config.strava_refresh_token,
+        )
+    except StravaAPIError as e:
+        logger.error(str(e))
+        sys.exit(1)
+
     is_partial = False
     try:
         activities = fetch_activities(
@@ -87,6 +98,10 @@ def main() -> None:
             "Rate limit reached after %d activities. Generating partial report.", len(activities)
         )
         is_partial = True
+    except StravaAPIError as e:
+        logger.error(str(e))
+        sys.exit(1)
+
     case_a, case_b = classify_activities(activities)
     logger.info("Inconsistencies — Case A: %d | Case B: %d", len(case_a), len(case_b))
 

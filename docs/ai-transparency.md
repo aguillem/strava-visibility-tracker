@@ -48,9 +48,28 @@ Whenever a document was written with AI assistance, it carries the following not
 
 ---
 
+## AI-driven technical and security audit
+
+After the initial codebase was generated and validated, Claude Code was used to perform an autonomous technical and security audit of the entire application. This step was intentional: having the same AI that wrote the code review it from an adversarial perspective tends to surface issues that a pure code-generation pass would miss.
+
+The audit covered the following dimensions:
+
+- **Exception architecture** — `sys.exit()` calls in library modules prevent unit testing and violate separation of concerns. All exits were moved to `main()`, with typed exceptions (`ConfigError`, `StravaAPIError`, `RateLimitError`) propagating up from the business logic.
+- **HTTP hardening** — missing timeouts on all `requests` calls (infinite hang risk). A `_REQUEST_TIMEOUT = 30` constant was introduced and applied everywhere. A `requests.Session` was also introduced in `fetch_activities` to reuse TCP/TLS connections across the many per-activity detail calls.
+- **API response validation** — `response.json().get("access_token")` without a guard would silently return `None`. A check was added to raise `StravaAPIError` if the key is missing.
+- **Markdown injection** — activity names containing `|` would break the Markdown table layout. An `_escape_md()` helper was added and applied to all table cells.
+- **OAuth CSRF** — the `get_refresh_token.py` helper built the authorization URL without a `state` parameter, leaving it vulnerable to CSRF. A `secrets.token_urlsafe(16)` state token is now generated, included in the URL, and verified in the callback.
+- **OAuth UX robustness** — the same helper had no timeout on `code_received.wait()` (would hang forever if the browser never redirected) and no error handling if the local port was already in use. Both are now addressed.
+- **Supply chain** — the `dawidd6/action-send-mail` GitHub Action was pinned by mutable tag (`@v3`). It is now pinned to a specific commit SHA.
+- **Dependency split** — `requirements.txt` mixed runtime and development dependencies. They are now separated into `requirements.txt` (runtime only) and `requirements-dev.txt` (dev/CI).
+
+Each finding was classified by criticality, addressed in code, reflected in the tests, and documented here. The human reviewed every change before merging.
+
+---
+
 ## Tools used
 
 | Tool | Usage |
 |------|-------|
 | [Claude](https://claude.ai) by Anthropic | Documentation assistance, specification drafting |
-| [Claude Code](https://claude.ai/code) by Anthropic | Code generation |
+| [Claude Code](https://claude.ai/code) by Anthropic | Code generation, technical and security audit |

@@ -7,6 +7,7 @@ Requires STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET to be set in your .env file.
 
 import http.server
 import os
+import secrets
 import threading
 import urllib.parse
 import webbrowser
@@ -16,6 +17,7 @@ from dotenv import load_dotenv
 
 _PORT = 8080
 _REDIRECT_URI = f"http://localhost:{_PORT}"
+_AUTH_TIMEOUT = 180
 
 
 def main() -> None:
@@ -28,6 +30,7 @@ def main() -> None:
         print("Error: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET must be set in your .env file.")
         return
 
+    state = secrets.token_urlsafe(16)
     auth_url = (
         "https://www.strava.com/oauth/authorize"
         f"?client_id={client_id}"
@@ -35,6 +38,7 @@ def main() -> None:
         f"&redirect_uri={_REDIRECT_URI}"
         "&approval_prompt=force"
         "&scope=activity:read_all"
+        f"&state={state}"
     )
 
     auth_code: str | None = None
@@ -44,6 +48,14 @@ def main() -> None:
         def do_GET(self) -> None:
             nonlocal auth_code
             params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            returned_state = params.get("state", [None])[0]
+            if returned_state != state:
+                self.send_response(400)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(b"<p>Error: invalid state parameter.</p>")
+                code_received.set()
+                return
             auth_code = params.get("code", [None])[0]
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -54,15 +66,23 @@ def main() -> None:
         def log_message(self, format: str, *args: object) -> None:
             pass
 
-    server = http.server.HTTPServer(("localhost", _PORT), _Handler)
+    try:
+        server = http.server.HTTPServer(("localhost", _PORT), _Handler)
+    except OSError:
+        print(f"Error: port {_PORT} is already in use. Close any other running instance and retry.")
+        return
+
     thread = threading.Thread(target=server.handle_request)
     thread.start()
 
     print("Opening Strava authorization page in your browser...")
     webbrowser.open(auth_url)
-    print("Waiting for authorization...")
+    print(f"Waiting for authorization (timeout: {_AUTH_TIMEOUT}s)...")
 
-    code_received.wait()
+    if not code_received.wait(timeout=_AUTH_TIMEOUT):
+        server.server_close()
+        print("Error: timed out waiting for authorization.")
+        return
     thread.join()
 
     if not auth_code:
@@ -77,6 +97,7 @@ def main() -> None:
             "code": auth_code,
             "grant_type": "authorization_code",
         },
+        timeout=30,
     )
 
     if not response.ok:

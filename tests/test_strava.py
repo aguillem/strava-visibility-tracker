@@ -6,15 +6,24 @@ All HTTP calls are mocked — no real network requests are made.
 from datetime import date
 
 import pytest
+import requests
 import responses
 
 from strava import (
     RateLimitError,
+    StravaAPIError,
     _fetch_activity_detail,
     _has_personal_record,
     fetch_activities,
     get_access_token,
 )
+
+
+def _make_session() -> requests.Session:
+    session = requests.Session()
+    session.headers.update({"Authorization": "Bearer test_token"})
+    return session
+
 
 TOKEN_URL = "https://www.strava.com/oauth/token"
 ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
@@ -55,10 +64,16 @@ class TestGetAccessToken:
         assert get_access_token("id", "secret", "token") == "my_token"
 
     @responses.activate
-    def test_exits_on_authentication_failure(self):
+    def test_raises_on_authentication_failure(self):
         responses.add(responses.POST, TOKEN_URL, json={"message": "Unauthorized"}, status=401)
-        with pytest.raises(SystemExit):
+        with pytest.raises(StravaAPIError):
             get_access_token("id", "bad_secret", "bad_token")
+
+    @responses.activate
+    def test_raises_when_access_token_missing_from_response(self):
+        responses.add(responses.POST, TOKEN_URL, json={"athlete": {}}, status=200)
+        with pytest.raises(StravaAPIError, match="access_token"):
+            get_access_token("id", "secret", "token")
 
 
 class TestFetchActivities:
@@ -185,9 +200,9 @@ class TestFetchActivities:
         assert exc_info.value.partial_activities[0].id == 1
 
     @responses.activate
-    def test_exits_on_generic_http_error(self):
+    def test_raises_on_generic_http_error(self):
         responses.add(responses.GET, ACTIVITIES_URL, status=403)
-        with pytest.raises(SystemExit):
+        with pytest.raises(StravaAPIError):
             fetch_activities("token", "full", None, None, [])
 
 
@@ -199,29 +214,29 @@ class TestFetchActivityDetail:
         detail_url = "https://www.strava.com/api/v3/activities/1"
         responses.add(responses.GET, detail_url, status=500)
         responses.add(responses.GET, detail_url, json=_detail_stub(1), status=200)
-        result = _fetch_activity_detail("token", 1)
+        result = _fetch_activity_detail(_make_session(), 1)
         assert result["id"] == 1
         assert len(responses.calls) == 2
 
     @responses.activate
-    def test_exits_after_two_consecutive_5xx_failures(self):
+    def test_raises_after_two_consecutive_5xx_failures(self):
         detail_url = "https://www.strava.com/api/v3/activities/1"
         responses.add(responses.GET, detail_url, status=500)
         responses.add(responses.GET, detail_url, status=500)
-        with pytest.raises(SystemExit):
-            _fetch_activity_detail("token", 1)
+        with pytest.raises(StravaAPIError):
+            _fetch_activity_detail(_make_session(), 1)
 
     @responses.activate
     def test_raises_rate_limit_error_on_429(self):
         responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1", status=429)
         with pytest.raises(RateLimitError):
-            _fetch_activity_detail("token", 1)
+            _fetch_activity_detail(_make_session(), 1)
 
     @responses.activate
-    def test_exits_on_generic_http_error(self):
+    def test_raises_on_generic_http_error(self):
         responses.add(responses.GET, "https://www.strava.com/api/v3/activities/1", status=404)
-        with pytest.raises(SystemExit):
-            _fetch_activity_detail("token", 1)
+        with pytest.raises(StravaAPIError):
+            _fetch_activity_detail(_make_session(), 1)
 
 
 class TestHasPersonalRecord:

@@ -4,13 +4,14 @@ Configuration module.
 Reads, validates and exposes all input parameters from environment variables.
 """
 
-import logging
 import os
-import sys
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-logger = logging.getLogger(__name__)
+
+class ConfigError(Exception):
+    """Raised when configuration is invalid or missing."""
+
 
 _KNOWN_ACTIVITY_TYPES = {
     "AlpineSki",
@@ -84,7 +85,7 @@ def load_config() -> Config:
     Read and validate all parameters from environment variables.
 
     Returns a Config instance with all validated values.
-    Exits with a descriptive error message if any required parameter is missing or invalid.
+    Raises ConfigError if any required parameter is missing or invalid.
     """
     raw_mode = os.getenv("MODE")
     today = date.today()
@@ -102,21 +103,33 @@ def load_config() -> Config:
         date_from = None
         date_to = None
     else:
-        logger.error("Invalid value for MODE: '%s'. Must be 'full' or 'partial'.", raw_mode)
-        sys.exit(1)
+        raise ConfigError(f"Invalid value for MODE: '{raw_mode}'. Must be 'full' or 'partial'.")
 
     if date_from is not None and date_to is not None and date_from > date_to:
-        logger.error("DATE_FROM (%s) must be before or equal to DATE_TO (%s).", date_from, date_to)
-        sys.exit(1)
+        raise ConfigError(
+            f"DATE_FROM ({date_from}) must be before or equal to DATE_TO ({date_to})."
+        )
+
+    client_id = os.getenv("STRAVA_CLIENT_ID", "")
+    client_secret = os.getenv("STRAVA_CLIENT_SECRET", "")
+    refresh_token = os.getenv("STRAVA_REFRESH_TOKEN", "")
+
+    for name, value in [
+        ("STRAVA_CLIENT_ID", client_id),
+        ("STRAVA_CLIENT_SECRET", client_secret),
+        ("STRAVA_REFRESH_TOKEN", refresh_token),
+    ]:
+        if not value:
+            raise ConfigError(f"Missing required environment variable: {name}.")
 
     return Config(
         mode=mode,
         date_from=date_from,
         date_to=date_to,
         activity_types=_parse_activity_types(os.getenv("ACTIVITY_TYPES")),
-        strava_client_id=os.getenv("STRAVA_CLIENT_ID", ""),
-        strava_client_secret=os.getenv("STRAVA_CLIENT_SECRET", ""),
-        strava_refresh_token=os.getenv("STRAVA_REFRESH_TOKEN", ""),
+        strava_client_id=client_id,
+        strava_client_secret=client_secret,
+        strava_refresh_token=refresh_token,
     )
 
 
@@ -127,6 +140,10 @@ def _parse_activity_types(raw: str | None) -> list[str]:
     Logs a warning for any unrecognised type.
     Returns an empty list if no filter is specified (meaning all types are included).
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     if raw is None:
         return []
     types = [t.strip() for t in raw.split(",") if t.strip()]
@@ -141,12 +158,11 @@ def _parse_date(raw: str | None, param_name: str) -> date | None:
     Parse an ISO 8601 date string (YYYY-MM-DD).
 
     Returns None if the input is None.
-    Exits with a descriptive error message if the format is invalid.
+    Raises ConfigError if the format is invalid.
     """
     if raw is None:
         return None
     try:
         return date.fromisoformat(raw)
     except ValueError:
-        logger.error("Invalid date format for %s: '%s'. Expected YYYY-MM-DD.", param_name, raw)
-        sys.exit(1)
+        raise ConfigError(f"Invalid date format for {param_name}: '{raw}'. Expected YYYY-MM-DD.")

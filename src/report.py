@@ -71,7 +71,8 @@ def generate_report(data: ReportData) -> str:
         lines += ["| Name | Date | Type | Link |", "|------|------|------|------|"]
         for a in data.case_a:
             lines.append(
-                f"| {a.name} | {a.start_date} | {a.activity_type} | {_activity_url(a.id)} |"
+                f"| {_escape_md(a.name)} | {a.start_date} | {a.activity_type}"
+                f" | {_activity_url(a.id)} |"
             )
     else:
         lines.append("_No inconsistencies found._")
@@ -90,7 +91,8 @@ def generate_report(data: ReportData) -> str:
         lines += ["| Name | Date | Type | Link |", "|------|------|------|------|"]
         for a in data.case_b:
             lines.append(
-                f"| {a.name} | {a.start_date} | {a.activity_type} | {_activity_url(a.id)} |"
+                f"| {_escape_md(a.name)} | {a.start_date} | {a.activity_type}"
+                f" | {_activity_url(a.id)} |"
             )
     else:
         lines.append("_No inconsistencies found._")
@@ -128,3 +130,10 @@ def _activity_url(activity_id: int) -> str:
     Return the public Strava URL for a given activity ID.
     """
     return f"https://www.strava.com/activities/{activity_id}"
+
+
+def _escape_md(text: str) -> str:
+    """
+    Escape characters that would break a Markdown table cell.
+    """
+    return text.replace("|", "\\|")

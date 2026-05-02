@@ -5,7 +5,6 @@ Handles authentication and all data fetching from the Strava API.
 """
 
 import logging
-import sys
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
@@ -13,6 +12,7 @@ import requests
 
 _TOKEN_URL = "https://www.strava.com/oauth/token"
 _API_BASE = "https://www.strava.com/api/v3"
+_REQUEST_TIMEOUT = 30
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +37,16 @@ class RateLimitError(Exception):
         self.partial_activities = partial_activities or []
 
 
+class StravaAPIError(Exception):
+    """Raised when the Strava API returns an unrecoverable error."""
+
+
 def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> str:
     """
     Obtain a fresh access token from the Strava OAuth endpoint.
 
     Uses the refresh token grant type.
-    Exits with a descriptive error message if authentication fails.
+    Raises StravaAPIError if authentication fails or the response is unexpected.
     """
     logger.info("Requesting access token...")
     response = requests.post(
@@ -53,12 +57,19 @@ def get_access_token(client_id: str, client_secret: str, refresh_token: str) -> 
             "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         },
+        timeout=_REQUEST_TIMEOUT,
     )
     if not response.ok:
-        logger.error("Authentication with the Strava API failed (HTTP %d).", response.status_code)
-        sys.exit(1)
+        raise StravaAPIError(
+            f"Authentication with the Strava API failed (HTTP {response.status_code})."
+        )
+    token = response.json().get("access_token")
+    if not token:
+        raise StravaAPIError(
+            "Unexpected response from Strava token endpoint: missing access_token."
+        )
     logger.info("Access token obtained.")
-    return response.json()["access_token"]
+    return token
 
 
 def fetch_activities(
@@ -73,10 +84,11 @@ def fetch_activities(
 
     Handles pagination automatically.
     Applies activity type filtering.
-    Respects rate limits and handles API errors gracefully.
+    Raises RateLimitError (with partial results) or StravaAPIError on failure.
     """
-    headers = {"Authorization": f"Bearer {access_token}"}
-    params: dict = {"per_page": 200, "page": 1}
+    session = requests.Session()
+    session.headers.update({"Authorization": f"Bearer {access_token}"})
+    params: dict[str, int] = {"per_page": 200, "page": 1}
 
     if mode == "partial":
         if date_from is not None:
@@ -94,17 +106,17 @@ def fetch_activities(
 
     while True:
         logger.info("Fetching page %d...", params["page"])
-        response = requests.get(f"{_API_BASE}/athlete/activities", headers=headers, params=params)
+        response = session.get(
+            f"{_API_BASE}/athlete/activities", params=params, timeout=_REQUEST_TIMEOUT
+        )
 
         if response.status_code == 429:
-            logger.error("Strava API rate limit reached. Please wait before running again.")
             raise RateLimitError(all_activities)
 
         if not response.ok:
-            logger.error(
-                "Strava API error (HTTP %d) while fetching activities.", response.status_code
+            raise StravaAPIError(
+                f"Strava API error (HTTP {response.status_code}) while fetching activities."
             )
-            sys.exit(1)
 
         page = response.json()
         if not page:
@@ -125,7 +137,7 @@ def fetch_activities(
                 raw["start_date_local"][:10],
             )
             try:
-                detail = _fetch_activity_detail(access_token, raw["id"])
+                detail = _fetch_activity_detail(session, raw["id"])
             except RateLimitError:
                 raise RateLimitError(all_activities)
 
@@ -148,40 +160,35 @@ def fetch_activities(
     return all_activities
 
 
-def _fetch_activity_detail(access_token: str, activity_id: int) -> dict:
+def _fetch_activity_detail(session: requests.Session, activity_id: int) -> dict:
     """
     Fetch the full detail of a single activity, including segment efforts.
 
     Retries once on 5xx errors.
-    Exits gracefully on 429 rate limit errors.
+    Raises RateLimitError on 429, StravaAPIError on other failures.
     """
-    headers = {"Authorization": f"Bearer {access_token}"}
     url = f"{_API_BASE}/activities/{activity_id}"
 
-    response = requests.get(url, headers=headers)
+    response = session.get(url, timeout=_REQUEST_TIMEOUT)
 
     if response.status_code == 429:
-        logger.error("Strava API rate limit reached. Please wait before running again.")
         raise RateLimitError()
 
     if response.status_code >= 500:
         logger.warning(
             "Server error (HTTP %d) for activity %d, retrying...", response.status_code, activity_id
         )
-        response = requests.get(url, headers=headers)
+        response = session.get(url, timeout=_REQUEST_TIMEOUT)
         if response.status_code >= 500:
-            logger.error(
-                "Strava API server error (HTTP %d) for activity %d after retry.",
-                response.status_code,
-                activity_id,
+            raise StravaAPIError(
+                f"Strava API server error (HTTP {response.status_code})"
+                f" for activity {activity_id} after retry."
             )
-            sys.exit(1)
 
     if not response.ok:
-        logger.error(
-            "Strava API error (HTTP %d) for activity %d.", response.status_code, activity_id
+        raise StravaAPIError(
+            f"Strava API error (HTTP {response.status_code}) for activity {activity_id}."
         )
-        sys.exit(1)
 
     return response.json()
 
