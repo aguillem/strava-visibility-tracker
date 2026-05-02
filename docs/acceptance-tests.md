@@ -18,7 +18,7 @@ Each test follows this structure:
 
 ## AT-01 — Visibility rules
 
-### AT-01-1 — Activity with PR and followers_only visibility is reported as Case A
+### AT-01-1 — Activity with PR and followers_only visibility is reported
 
 **Given** an activity with:
 - visibility: `followers_only`
@@ -26,11 +26,11 @@ Each test follows this structure:
 
 **When** the script runs
 
-**Then** the activity appears in the report under **Case A — Should be PUBLIC**
+**Then** the activity appears in the report under **Hidden PRs — Should be PUBLIC**
 
 ---
 
-### AT-01-2 — Activity with PR and only_me visibility is reported as Case A
+### AT-01-2 — Activity with PR and only_me visibility is reported
 
 **Given** an activity with:
 - visibility: `only_me`
@@ -38,20 +38,7 @@ Each test follows this structure:
 
 **When** the script runs
 
-**Then** the activity appears in the report under **Case A — Should be PUBLIC**
-
----
-
-### AT-01-3 — Activity with no PR, not a race, and public visibility is reported as Case B
-
-**Given** an activity with:
-- visibility: `everyone`
-- no segment effort with `pr_rank = 1`
-- not tagged as a race (`workout_type` ≠ 1 and ≠ 11)
-
-**When** the script runs
-
-**Then** the activity appears in the report under **Case B — Should be FOLLOWERS ONLY**
+**Then** the activity appears in the report under **Hidden PRs — Should be PUBLIC**
 
 ---
 
@@ -63,47 +50,20 @@ Each test follows this structure:
 
 **When** the script runs
 
-**Then** the activity does **not** appear in the report
+**Then** the activity does **not** appear in the report (it is already correctly public)
 
 ---
 
-### AT-01-12 — Activity with a global leaderboard ranking and public visibility is not reported
+### AT-01-12 — Activity with a global leaderboard ranking and followers_only visibility is reported
 
 **Given** an activity with:
-- visibility: `everyone`
+- visibility: `followers_only`
 - no segment effort with `pr_rank = 1`
 - at least one segment effort with an achievement of `type_id = 2` (global leaderboard ranking)
 
 **When** the script runs
 
-**Then** the activity does **not** appear in the report (the leaderboard ranking justifies being public)
-
----
-
-### AT-01-13 — Activity with a previous PR (pr_rank ≥ 2) and public visibility is reported as Case B
-
-**Given** an activity with:
-- visibility: `everyone`
-- segment efforts with `pr_rank = 2` or higher (personal best beaten since)
-- no segment effort with `pr_rank = 1`
-- no global leaderboard achievement (`type_id = 2`)
-
-**When** the script runs
-
-**Then** the activity appears in the report under **Case B — Should be FOLLOWERS ONLY**
-
----
-
-### AT-01-14 — First-time segment with no leaderboard ranking appears as Case B (known limitation)
-
-**Given** an activity with:
-- visibility: `everyone`
-- no segment effort with `pr_rank = 1`
-- no achievements on any segment effort
-
-**When** the script runs
-
-**Then** the activity appears in the report under **Case B**, even if it was the first time doing the segment — this is a known limitation of the Strava API
+**Then** the activity appears in the report (the leaderboard ranking qualifies as a PR-equivalent)
 
 ---
 
@@ -139,46 +99,7 @@ Each test follows this structure:
 
 **When** the script runs
 
-**Then** the activity appears in the report under **Case A — Should be PUBLIC**
-
----
-
-### AT-01-8 — Activity with no segment efforts and public visibility is reported as Case B
-
-**Given** an activity with:
-- visibility: `everyone`
-- no segment efforts at all
-- not tagged as a race
-
-**When** the script runs
-
-**Then** the activity appears in the report under **Case B — Should be FOLLOWERS ONLY**
-
----
-
-### AT-01-10 — Run race with no PR and public visibility is not reported
-
-**Given** an activity with:
-- visibility: `everyone`
-- no segment effort with `pr_rank = 1`
-- tagged as a run race (`workout_type = 1`)
-
-**When** the script runs
-
-**Then** the activity does **not** appear in the report (it is correctly public)
-
----
-
-### AT-01-11 — Ride race with no PR and public visibility is not reported
-
-**Given** an activity with:
-- visibility: `everyone`
-- no segment effort with `pr_rank = 1`
-- tagged as a ride race (`workout_type = 11`)
-
-**When** the script runs
-
-**Then** the activity does **not** appear in the report (it is correctly public)
+**Then** the activity appears in the report under **Hidden PRs — Should be PUBLIC**
 
 ---
 
@@ -332,7 +253,7 @@ and an activity starting exactly on 2024-03-31
 ### AT-04-1 — Report contains correct header metadata
 
 **Given** `MODE=partial`, `DATE_FROM=2024-01-01`, `DATE_TO=2024-03-31`, `ACTIVITY_TYPES=Run`
-and 10 activities scanned with 3 inconsistencies
+and 10 activities scanned with 3 hidden PRs
 
 **When** the script runs
 
@@ -342,13 +263,13 @@ and 10 activities scanned with 3 inconsistencies
 - `Date range: 2024-01-01 → 2024-03-31`
 - `Activity types filter: Run`
 - `Activities scanned: 10`
-- `Inconsistencies found: 3`
+- `Hidden PRs found: 3`
 
 ---
 
 ### AT-04-2 — Report contains correct activity details
 
-**Given** an inconsistent activity with:
+**Given** a hidden PR activity with:
 - name: `Morning Run`
 - date: `2024-02-14`
 - type: `Run`
@@ -370,17 +291,17 @@ and 10 activities scanned with 3 inconsistencies
 
 **When** the script runs
 
-**Then** the report header displays `All time` as the date range (instead of a specific date interval)
+**Then** the report header displays `All time` as the date range
 
 ---
 
-### AT-04-4 — Report shows "no inconsistencies" message when all activities are consistent
+### AT-04-4 — Report shows "no hidden PRs" message when all activities are consistent
 
-**Given** all scanned activities have consistent visibility
+**Given** all scanned activities are already public or have no PR
 
 **When** the script runs
 
-**Then** the report displays `_No inconsistencies found._` and both Case A and Case B sections are empty
+**Then** the report displays `_No hidden PRs found._`
 
 ---
 
@@ -392,7 +313,7 @@ and 10 activities scanned with 3 inconsistencies
 
 **Then**:
 - the script exits without error
-- the report is generated with `Activities scanned: 0` and `Inconsistencies found: 0`
+- the report is generated with `Activities scanned: 0` and `Hidden PRs found: 0`
 
 ---
 
@@ -406,12 +327,11 @@ and 10 activities scanned with 3 inconsistencies
 
 ### AT-04-7 — Console output displays a summary
 
-**When** the script runs and finds 2 Case A and 1 Case B inconsistencies across 15 scanned activities
+**When** the script runs and finds 2 hidden PRs across 15 scanned activities
 
 **Then** the console output (stdout) includes:
 - total activities scanned: 15
-- Case A inconsistencies: 2
-- Case B inconsistencies: 1
+- hidden PRs: 2
 
 ---
 

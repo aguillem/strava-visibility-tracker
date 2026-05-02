@@ -1,7 +1,7 @@
 """
 Report generation module.
 
-Builds the Markdown report from the list of inconsistent activities.
+Builds the Markdown report from the list of activities with hidden PRs.
 """
 
 import os
@@ -21,8 +21,7 @@ class ReportData:
     date_to: str | None
     activity_types: list[str]
     scanned_count: int
-    case_a: list[Activity]  # has PR but not public
-    case_b: list[Activity]  # no PR but public
+    hidden_prs: list[Activity]
     is_partial: bool = False
 
 
@@ -30,7 +29,6 @@ def generate_report(data: ReportData) -> str:
     """
     Generate the full Markdown report content as a string.
     """
-    total = len(data.case_a) + len(data.case_b)
     types_display = ", ".join(data.activity_types) if data.activity_types else "All"
 
     if data.date_from and data.date_to:
@@ -57,45 +55,25 @@ def generate_report(data: ReportData) -> str:
         f"- Date range: {date_range}",
         f"- Activity types filter: {types_display}",
         f"- Activities scanned: {data.scanned_count}",
-        f"- Inconsistencies found: {total}",
+        f"- Hidden PRs found: {len(data.hidden_prs)}",
         "",
         "---",
         "",
-        "## Case A — Should be PUBLIC",
+        "## Hidden PRs — Should be PUBLIC",
         "",
         "Activities that have a segment PR but are not visible to everyone.",
         "",
     ]
 
-    if data.case_a:
+    if data.hidden_prs:
         lines += ["| Name | Date | Type | Link |", "|------|------|------|------|"]
-        for a in data.case_a:
+        for a in data.hidden_prs:
             lines.append(
                 f"| {_escape_md(a.name)} | {a.start_date} | {a.activity_type}"
                 f" | {_activity_url(a.id)} |"
             )
     else:
-        lines.append("_No inconsistencies found._")
-
-    lines += [
-        "",
-        "---",
-        "",
-        "## Case B — Should be FOLLOWERS ONLY",
-        "",
-        "Activities with no segment PR that are public.",
-        "",
-    ]
-
-    if data.case_b:
-        lines += ["| Name | Date | Type | Link |", "|------|------|------|------|"]
-        for a in data.case_b:
-            lines.append(
-                f"| {_escape_md(a.name)} | {a.start_date} | {a.activity_type}"
-                f" | {_activity_url(a.id)} |"
-            )
-    else:
-        lines.append("_No inconsistencies found._")
+        lines.append("_No hidden PRs found._")
 
     return "\n".join(lines) + "\n"
 
@@ -117,12 +95,9 @@ def write_report(content: str, generated_at: datetime) -> str:
 def print_summary(data: ReportData) -> None:
     """
     Print a short summary to stdout.
-
-    Includes total activities scanned, Case A count and Case B count.
     """
     print(f"Activities scanned: {data.scanned_count}")
-    print(f"Case A (should be public): {len(data.case_a)}")
-    print(f"Case B (should be followers only): {len(data.case_b)}")
+    print(f"Hidden PRs (should be public): {len(data.hidden_prs)}")
 
 
 def _activity_url(activity_id: int) -> str:

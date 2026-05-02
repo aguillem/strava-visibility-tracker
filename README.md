@@ -14,21 +14,14 @@ The problem is that managing activity visibility manually is tedious and error-p
 
 ## How it works
 
-The rules are simple:
+The rule is simple:
 
-- 🏆 Activity with a **segment PR** → should be **public**
+- 🏆 Activity with a **segment PR** (`pr_rank = 1`) → should be **public**
 - 🌍 Activity with a **global leaderboard ranking** on a segment → should be **public**
-- 🏅 Activity tagged as a **race** → should be **public**
-- 🙈 Activity with none of the above → should be **followers only**
 
-The tool detects two types of inconsistencies:
+The tool finds activities that match one of the above but are set to `followers only` or `only me`, so you can make them public.
 
-| Case | Situation | What to do |
-|------|-----------|------------|
-| A | Activity is `followers only` or `only me`, but has a PR | Set it to **public** |
-| B | Activity is `everyone`, has no PR, no leaderboard ranking, and is not a race | Set it to **followers only** |
-
-> ⚠️ **Known limitation** — When doing a segment for the first time without achieving a global leaderboard ranking, the Strava API provides no signal to distinguish this activity from a regular non-notable one. These activities may appear as false positives in Case B and require manual review.
+> **Note:** The Strava API marks `pr_rank = 1` based on the state at the time the activity was recorded. Once a PR is beaten, the older activity retains its `pr_rank = 1` marker — the API does not retroactively update it. As a result, this tool only detects activities with a PR that are currently hidden; it does not flag activities whose PR has since been beaten.
 
 ---
 
@@ -143,8 +136,7 @@ reports/strava-visibility-report-20240615-083000.md
 A summary is also printed to the console:
 ```
 Activities scanned: 42
-Case A (should be public): 3
-Case B (should be followers only): 1
+Hidden PRs (should be public): 3
 
 Report written to: reports/strava-visibility-report-20240615-083000.md
 ```

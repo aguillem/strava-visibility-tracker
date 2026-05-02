@@ -6,32 +6,30 @@
 
 ## 1. Purpose
 
-Every athlete faces the same existential dilemma: we cherish our privacy, yet we desperately want the world to witness our greatest achievements. Why would anyone care that you dragged yourself through a rainy Tuesday jog at a pace that would embarrass a sleepy tortoise? Nobody needs to see that. But that segment PR you smashed after months of training? That deserves a standing ovation from the entire Strava community.
+Every athlete faces the same existential dilemma: we cherish our privacy, yet we desperately want the world to witness our greatest achievements. Nobody needs to know about that rainy Tuesday jog at a pace that would embarrass a sleepy tortoise. But that segment PR you smashed after months of training? That deserves a standing ovation from the entire Strava community.
 
-The problem is that managing activity visibility manually is tedious, inconsistent, and frankly beneath someone who just ran 80 km through the mountains. Segments get created after the fact, PRs get beaten, and suddenly your visibility settings are a complete mess — private heroics hidden from the world, and mediocre efforts unnecessarily exposed.
+The problem is that managing activity visibility manually is tedious and error-prone. Segments get created after the fact, and suddenly your hard-earned PR activities are buried on private while the world is deprived of your heroics.
 
-This tool analyses a Strava athlete's activities and detects **visibility inconsistencies** based on the presence of segment personal records (PRs).
+This tool analyses a Strava athlete's activities and detects **activities that have a segment personal record (PR) but are not publicly visible**.
 
 The core rule is:
-- An activity **should be public** if it contains at least one segment effort ranked as a personal record (`pr_rank = 1`).
-- An activity **should be visible to followers only** if it contains no segment PR.
+- An activity **should be public** if it contains at least one segment effort ranked as a personal record (`pr_rank = 1`) or a global leaderboard ranking.
 
-Since the Strava API does not allow programmatic update of activity visibility, this tool does **not modify any data**. It produces a **report listing inconsistent activities** so the athlete can manually fix them in the Strava app or website.
+Since the Strava API does not allow programmatic update of activity visibility, this tool does **not modify any data**. It produces a **report listing activities with hidden PRs** so the athlete can manually fix them in the Strava app or website.
 
 ---
 
-## 2. Visibility Inconsistency Rules
+## 2. Visibility Rule
 
-Two cases are considered inconsistent and must be reported:
+An activity is reported as a **hidden PR** when:
 
-| Case | Current Visibility | PR on a Segment | Expected Action |
-|------|--------------------|-----------------|-----------------|
-| A    | `followers_only` or `only_me` | yes (≥ 1 PR) | Should be set to **public** |
-| B    | `public`           | no              | Should be set to **followers only** |
+| Current Visibility | PR on a Segment | Expected Action |
+|--------------------|-----------------|-----------------|
+| `followers_only` or `only_me` | yes (≥ 1 PR) | Should be set to **public** |
 
-> **Note:** An activity with **at least one** segment effort where `pr_rank = 1` is considered to have a PR, regardless of the number of segments on the activity.
+> **Note:** An activity with **at least one** segment effort where `pr_rank = 1` or with a global leaderboard achievement (`type_id = 2`) is considered to have a PR, regardless of the number of segments on the activity.
 
-> **Visibility values:** Strava exposes three visibility levels: `public`, `followers_only`, and `only_me`. For Case A, both `followers_only` and `only_me` are considered inconsistent when a PR is present. For Case B, only `public` is inconsistent — `only_me` activities without a PR are considered intentionally private and are **not reported**.
+> **Visibility values:** Strava exposes three visibility levels: `everyone`, `followers_only`, and `only_me`. Both `followers_only` and `only_me` are considered inconsistent when a PR is present. Activities that are already `everyone` with a PR are correctly public and not reported.
 
 ---
 
@@ -69,7 +67,7 @@ The tool uses the **Strava OAuth 2.0** flow.
 
 - Authentication is performed via the **refresh token grant**: on each run, a new access token is obtained using the stored refresh token.
 - The required OAuth scope is **`activity:read_all`** (mandatory to access segment efforts and `pr_rank`).
-- Credentials are stored as **GitLab CI/CD variables** (secrets) and never committed to the repository.
+- Credentials are stored as **GitHub Actions secrets** and never committed to the repository.
 - The tool does not handle the initial OAuth authorization flow (obtaining the first refresh token). This is a one-time manual step documented in the README.
 
 ---
@@ -82,9 +80,8 @@ The tool uses the **Strava OAuth 2.0** flow.
 3. Apply ACTIVITY_TYPES filter if provided
 4. For each activity:
    a. Fetch segment efforts for the activity
-   b. Check if at least one effort has pr_rank = 1
-   c. Compare with current activity visibility
-   d. If inconsistency detected (Case A or Case B) → add to report
+   b. Check if at least one effort has pr_rank = 1 or a global leaderboard achievement
+   c. If the activity has a PR and is not public → add to report
 5. Generate and output the report
 ```
 
@@ -94,8 +91,7 @@ The tool uses the **Strava OAuth 2.0** flow.
 |----------|---------|
 | `POST https://www.strava.com/oauth/token` | Refresh access token |
 | `GET /athlete/activities` | List activities (paginated, 200 per page max) |
-| `GET /activities/{id}/laps` | — (not used) |
-| `GET /activities/{id}` | Fetch full activity details including `visibility` |
+| `GET /activities/{id}` | Fetch full activity details including `visibility` and segment efforts |
 | `GET /athlete/activities` with `after`/`before` params | Date range filtering |
 
 > **Note on segment efforts:** Segment efforts including `pr_rank` are returned within the detailed activity object (`GET /activities/{id}`). A separate segment efforts endpoint is not required.
@@ -111,7 +107,7 @@ The Strava API enforces rate limits (100 requests per 15 minutes, 1000 per day b
 
 ## 6. Output / Report
 
-The report is the **only output** of the tool. It is generated regardless of whether inconsistencies are found.
+The report is the **only output** of the tool. It is generated regardless of whether any hidden PRs are found.
 
 ### 6.1 Format
 
@@ -126,26 +122,20 @@ Mode: <full | partial>
 Date range: <DATE_FROM> → <DATE_TO> (only if MODE=partial)
 Activity types filter: <list | none>
 Activities scanned: <N>
-Inconsistencies found: <N>
+Hidden PRs found: <N>
 
 ---
 
-## Case A — Should be PUBLIC (has a PR but visibility is followers only)
+## Hidden PRs — Should be PUBLIC
+
+Activities that have a segment PR but are not visible to everyone.
 
 | Activity | Date | Type | Strava Link |
 |----------|------|------|-------------|
 | <name>   | <date> | <type> | [View](<url>) |
 
 ---
-
-## Case B — Should be FOLLOWERS ONLY (no PR but visibility is public)
-
-| Activity | Date | Type | Strava Link |
-|----------|------|------|-------------|
-| <name>   | <date> | <type> | [View](<url>) |
-
----
-_No inconsistencies found._ (displayed if both sections are empty)
+_No hidden PRs found._ (displayed if no hidden PRs)
 ```
 
 ### 6.3 Strava Activity Link Format
@@ -157,24 +147,23 @@ https://www.strava.com/activities/{activity_id}
 
 ### 6.4 Report Delivery
 
-- In **GitLab CI**, the report is exposed as a **pipeline artifact** (downloadable from the GitLab UI).
+- In **GitHub Actions**, the report is exposed as a **workflow artifact** (downloadable from the Actions UI) and displayed in the run summary.
 - The report filename includes the run timestamp: `strava-visibility-report-<YYYYMMDD-HHmmss>.md`.
-- Console output (stdout) displays a summary (number of activities scanned, number of inconsistencies per case).
+- Console output (stdout) displays a summary (number of activities scanned, number of hidden PRs).
 
 ---
 
 ## 7. Scheduling & Execution
 
-### 7.1 Scheduled Run (GitLab CI)
+### 7.1 Scheduled Run (GitHub Actions)
 
 - The pipeline runs automatically on a **configurable cron schedule**.
 - The **default schedule is monthly** (`0 8 1 * *` — first day of each month at 08:00 UTC).
-- The schedule is defined in `.gitlab-ci.yml` and can be overridden via GitLab's scheduled pipeline UI.
 
 ### 7.2 Manual Trigger
 
-- The pipeline can be **triggered manually** from the GitLab UI (via `Run pipeline`).
-- When triggered manually, all input parameters (`MODE`, `DATE_FROM`, `DATE_TO`, `ACTIVITY_TYPES`) can be passed as **pipeline variables** from the UI.
+- The pipeline can be **triggered manually** from the GitHub Actions UI.
+- When triggered manually, all input parameters (`MODE`, `DATE_FROM`, `DATE_TO`, `ACTIVITY_TYPES`) can be passed as inputs.
 
 ### 7.3 Default Behaviour (no parameters provided)
 
@@ -192,14 +181,14 @@ https://www.strava.com/activities/{activity_id}
 | Situation | Expected Behaviour |
 |-----------|--------------------|
 | Invalid `MODE` value | Exit with error and descriptive message |
-| `DATE_FROM` missing when `MODE=partial` | Exit with error |
+| `DATE_FROM` missing when `MODE=partial` | Default to last 30 days |
 | `DATE_FROM` after `DATE_TO` | Exit with error |
 | Invalid `ACTIVITY_TYPES` value | Log a warning, skip unknown types, continue |
 | Strava API authentication failure | Exit with error |
-| Strava API rate limit hit (429) | Log error, exit gracefully |
+| Strava API rate limit hit (429) | Generate partial report with warning banner |
 | Strava API unexpected error (5xx) | Retry once, then exit with error |
-| Activity with no segment efforts | Treated as "no PR" — reported as Case B if `public`, ignored if `only_me` |
-| Empty result (no activities match filters) | Generate report with 0 inconsistencies, no error |
+| Activity with no segment efforts | Treated as "no PR" — not reported |
+| Empty result (no activities match filters) | Generate report with 0 hidden PRs, no error |
 
 ---
 

@@ -3,8 +3,8 @@ Strava Visibility Tracker
 
 Entry point and orchestration.
 
-Detects Strava activity visibility inconsistencies based on segment personal records
-and generates a Markdown report listing activities that should be reviewed.
+Detects activities that have a segment PR but are not publicly visible,
+and generates a Markdown report listing them for manual review.
 """
 
 import logging
@@ -21,25 +21,9 @@ from strava import Activity, RateLimitError, StravaAPIError, fetch_activities, g
 logger = logging.getLogger(__name__)
 
 
-_RACE_WORKOUT_TYPES = frozenset({1, 11})  # run race, ride race
-
-
-def classify_activities(activities: list[Activity]) -> tuple[list[Activity], list[Activity]]:
-    """
-    Classify activities into two inconsistency cases.
-
-    Case A: has a PR but visibility is followers_only or only_me
-    Case B: no PR, not a race, but visibility is everyone
-
-    Returns a tuple (case_a, case_b).
-    """
-    case_a = [a for a in activities if a.has_pr and a.visibility in ("followers_only", "only_me")]
-    case_b = [
-        a
-        for a in activities
-        if not a.has_pr and a.workout_type not in _RACE_WORKOUT_TYPES and a.visibility == "everyone"
-    ]
-    return case_a, case_b
+def find_hidden_prs(activities: list[Activity]) -> list[Activity]:
+    """Return activities that have a PR but are not visible to everyone."""
+    return [a for a in activities if a.has_pr and a.visibility in ("followers_only", "only_me")]
 
 
 def main() -> None:
@@ -49,7 +33,7 @@ def main() -> None:
     1. Load and validate configuration
     2. Authenticate with Strava
     3. Fetch activities
-    4. Classify inconsistencies
+    4. Find hidden PRs
     5. Generate and write the report
     6. Print summary to console
     """
@@ -102,8 +86,8 @@ def main() -> None:
         logger.error(str(e))
         sys.exit(1)
 
-    case_a, case_b = classify_activities(activities)
-    logger.info("Inconsistencies — Case A: %d | Case B: %d", len(case_a), len(case_b))
+    hidden_prs = find_hidden_prs(activities)
+    logger.info("Hidden PRs found: %d", len(hidden_prs))
 
     now = datetime.now()
     data = ReportData(
@@ -113,8 +97,7 @@ def main() -> None:
         date_to=str(config.date_to) if config.date_to else None,
         activity_types=config.activity_types,
         scanned_count=len(activities),
-        case_a=case_a,
-        case_b=case_b,
+        hidden_prs=hidden_prs,
         is_partial=is_partial,
     )
 

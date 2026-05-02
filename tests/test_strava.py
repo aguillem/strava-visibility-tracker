@@ -35,7 +35,6 @@ def _activity_stub(
     sport_type="Run",
     start_date="2024-03-15T08:00:00Z",
     visibility="everyone",
-    workout_type=0,
 ):
     return {
         "id": id,
@@ -43,7 +42,6 @@ def _activity_stub(
         "sport_type": sport_type,
         "start_date_local": start_date,
         "visibility": visibility,
-        "workout_type": workout_type,
     }
 
 
@@ -94,25 +92,6 @@ class TestFetchActivities:
             )
         result = fetch_activities("token", "full", None, None, [])
         assert len(result) == 2
-
-    @responses.activate
-    def test_workout_type_is_read_from_api_response(self):
-        responses.add(
-            responses.GET,
-            ACTIVITIES_URL,
-            json=[_activity_stub(1, workout_type=1)],
-            status=200,
-        )
-        responses.add(responses.GET, ACTIVITIES_URL, json=[], status=200)
-        responses.add(
-            responses.GET,
-            "https://www.strava.com/api/v3/activities/1",
-            json=_detail_stub(1),
-            status=200,
-        )
-        result = fetch_activities("token", "full", None, None, [])
-        assert len(result) == 1
-        assert result[0].workout_type == 1
 
     @responses.activate
     def test_filters_by_date_range_in_partial_mode(self):

@@ -4,7 +4,7 @@ Unit tests for the report generation module.
 
 from datetime import date, datetime
 
-from main import classify_activities
+from main import find_hidden_prs
 from report import ReportData, generate_report, print_summary, write_report
 from strava import Activity
 
@@ -16,7 +16,6 @@ def _activity(
     start_date=date(2024, 2, 14),
     visibility="everyone",
     has_pr=False,
-    workout_type=0,
 ):
     return Activity(
         id=id,
@@ -25,7 +24,6 @@ def _activity(
         start_date=start_date,
         visibility=visibility,
         has_pr=has_pr,
-        workout_type=workout_type,
     )
 
 
@@ -37,8 +35,7 @@ def _report_data(**kwargs):
         "date_to": "2024-03-31",
         "activity_types": ["Run"],
         "scanned_count": 10,
-        "case_a": [],
-        "case_b": [],
+        "hidden_prs": [],
     }
     return ReportData(**{**defaults, **kwargs})
 
@@ -53,8 +50,11 @@ class TestGenerateReport:
     def test_report_contains_correct_header_metadata(self):
         data = _report_data(
             scanned_count=10,
-            case_a=[_activity(id=1, visibility="followers_only", has_pr=True)],
-            case_b=[_activity(id=2), _activity(id=3)],
+            hidden_prs=[
+                _activity(id=1, visibility="followers_only", has_pr=True),
+                _activity(id=2, visibility="followers_only", has_pr=True),
+                _activity(id=3, visibility="only_me", has_pr=True),
+            ],
         )
         report = generate_report(data)
         assert "Mode: partial" in report
@@ -62,9 +62,9 @@ class TestGenerateReport:
         assert "2024-03-31" in report
         assert "Run" in report
         assert "Activities scanned: 10" in report
-        assert "Inconsistencies found: 3" in report
+        assert "Hidden PRs found: 3" in report
 
-    def test_case_a_section_lists_correct_activities(self):
+    def test_hidden_prs_section_lists_correct_activities(self):
         activity = _activity(
             id=123456789,
             name="Morning Run",
@@ -73,27 +73,19 @@ class TestGenerateReport:
             visibility="followers_only",
             has_pr=True,
         )
-        report = generate_report(_report_data(case_a=[activity]))
+        report = generate_report(_report_data(hidden_prs=[activity]))
         assert "Morning Run" in report
         assert "2024-02-14" in report
         assert "Run" in report
         assert "123456789" in report
 
-    def test_case_b_section_lists_correct_activities(self):
-        activity = _activity(
-            id=987, name="Evening Ride", activity_type="Ride", visibility="everyone", has_pr=False
-        )
-        report = generate_report(_report_data(case_b=[activity]))
-        assert "Evening Ride" in report
-        assert "987" in report
-
-    def test_no_inconsistencies_message_when_both_cases_empty(self):
-        report = generate_report(_report_data(case_a=[], case_b=[]))
-        assert "_No inconsistencies found._" in report
+    def test_no_hidden_prs_message_when_empty(self):
+        report = generate_report(_report_data(hidden_prs=[]))
+        assert "_No hidden PRs found._" in report
 
     def test_activity_link_format(self):
         activity = _activity(id=123456789, visibility="followers_only", has_pr=True)
-        report = generate_report(_report_data(case_a=[activity]))
+        report = generate_report(_report_data(hidden_prs=[activity]))
         assert "https://www.strava.com/activities/123456789" in report
 
     def test_report_does_not_contain_credentials(self):
@@ -112,7 +104,7 @@ class TestGenerateReport:
 
     def test_pipe_in_activity_name_is_escaped(self):
         activity = _activity(id=1, name="Run | Race", visibility="followers_only", has_pr=True)
-        report = generate_report(_report_data(case_a=[activity]))
+        report = generate_report(_report_data(hidden_prs=[activity]))
         assert r"Run \| Race" in report
 
 
@@ -128,75 +120,43 @@ class TestWriteReport:
 class TestPrintSummary:
     """Tests for print_summary()."""
 
-    def test_summary_includes_scanned_count_and_case_counts(self, capsys):
+    def test_summary_includes_scanned_count_and_hidden_prs(self, capsys):
         data = _report_data(
             scanned_count=15,
-            case_a=[
+            hidden_prs=[
                 _activity(id=1, visibility="followers_only", has_pr=True),
                 _activity(id=2, visibility="only_me", has_pr=True),
             ],
-            case_b=[_activity(id=3, visibility="everyone", has_pr=False)],
         )
         print_summary(data)
         output = capsys.readouterr().out
         assert "15" in output
         assert "2" in output
-        assert "1" in output
 
 
-class TestClassifyActivities:
-    """Tests for classify_activities() in main.py."""
+class TestFindHiddenPrs:
+    """Tests for find_hidden_prs() in main.py."""
 
-    def test_followers_only_with_pr_is_case_a(self):
+    def test_followers_only_with_pr_is_hidden(self):
         a = _activity(visibility="followers_only", has_pr=True)
-        case_a, case_b = classify_activities([a])
-        assert a in case_a
-        assert a not in case_b
+        assert a in find_hidden_prs([a])
 
-    def test_only_me_with_pr_is_case_a(self):
+    def test_only_me_with_pr_is_hidden(self):
         a = _activity(visibility="only_me", has_pr=True)
-        case_a, case_b = classify_activities([a])
-        assert a in case_a
-        assert a not in case_b
+        assert a in find_hidden_prs([a])
 
-    def test_public_without_pr_is_case_b(self):
-        a = _activity(visibility="everyone", has_pr=False)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a in case_b
-
-    def test_public_with_pr_is_not_reported(self):
+    def test_public_with_pr_is_not_hidden(self):
         a = _activity(visibility="everyone", has_pr=True)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a not in case_b
+        assert a not in find_hidden_prs([a])
 
-    def test_followers_only_without_pr_is_not_reported(self):
+    def test_followers_only_without_pr_is_not_hidden(self):
         a = _activity(visibility="followers_only", has_pr=False)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a not in case_b
+        assert a not in find_hidden_prs([a])
 
-    def test_only_me_without_pr_is_not_reported(self):
+    def test_only_me_without_pr_is_not_hidden(self):
         a = _activity(visibility="only_me", has_pr=False)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a not in case_b
+        assert a not in find_hidden_prs([a])
 
-    def test_run_race_public_without_pr_is_not_case_b(self):
-        a = _activity(visibility="everyone", has_pr=False, workout_type=1)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a not in case_b
-
-    def test_ride_race_public_without_pr_is_not_case_b(self):
-        a = _activity(visibility="everyone", has_pr=False, workout_type=11)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a not in case_b
-
-    def test_non_race_public_without_pr_is_still_case_b(self):
-        a = _activity(visibility="everyone", has_pr=False, workout_type=0)
-        case_a, case_b = classify_activities([a])
-        assert a not in case_a
-        assert a in case_b
+    def test_public_without_pr_is_not_hidden(self):
+        a = _activity(visibility="everyone", has_pr=False)
+        assert a not in find_hidden_prs([a])

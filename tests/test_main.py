@@ -18,7 +18,6 @@ def _activity_stub(
     sport_type="Run",
     start_date="2024-03-15T08:00:00Z",
     name="Morning Run",
-    workout_type=0,
 ):
     return {
         "id": id,
@@ -26,7 +25,6 @@ def _activity_stub(
         "sport_type": sport_type,
         "start_date_local": start_date,
         "visibility": visibility,
-        "workout_type": workout_type,
     }
 
 
@@ -55,8 +53,8 @@ class TestMain:
             responses.GET,
             ACTIVITIES_URL,
             json=[
-                _activity_stub(1, visibility="followers_only", name="Case A Run"),
-                _activity_stub(2, visibility="everyone", name="Case B Ride"),
+                _activity_stub(1, visibility="followers_only", name="Hidden PR Run"),
+                _activity_stub(2, visibility="everyone", name="Public Run"),
             ],
             status=200,
         )
@@ -80,14 +78,13 @@ class TestMain:
         reports = list(tmp_path.glob("reports/strava-visibility-report-*.md"))
         assert len(reports) == 1
         content = reports[0].read_text(encoding="utf-8")
-        assert "Case A Run" in content
-        assert "Case B Ride" in content
+        assert "Hidden PR Run" in content
+        assert "Public Run" not in content
         assert "https://www.strava.com/activities/1" in content
 
         out = capsys.readouterr().out
         assert "Activities scanned: 2" in out
-        assert "Case A (should be public): 1" in out
-        assert "Case B (should be followers only): 1" in out
+        assert "Hidden PRs (should be public): 1" in out
         assert "Report written to:" in out
 
     @responses.activate
