@@ -18,8 +18,9 @@ This document describes the step-by-step process followed to design, build and p
 | 6 | CI Pipeline (lint, unit tests on commit) | ✅ Done |
 | 7 | Execution Pipeline (scheduled & manual) | ✅ Done |
 | 8 | Code Generation & Unit Tests | ✅ Done |
-| 9 | Review & Validation (acceptance tests) | ⬜ To do |
-| 10 | Publication & Open Source Release | ⬜ To do |
+| 9 | AI-driven Technical & Security Audit | ✅ Done |
+| 10 | Review & Validation (acceptance tests) | ✅ Done |
+| 11 | Publication & Open Source Release | ⬜ To do |
 
 ---
 
@@ -93,7 +94,7 @@ This document describes the step-by-step process followed to design, build and p
 
 ---
 
-## Step 8 — Code Generation & Unit Tests ⬜
+## Step 8 — Code Generation & Unit Tests ✅
 
 **Goal:** Generate the full business logic and unit tests using Claude Code, based on the functional specifications and acceptance tests.
 
@@ -101,15 +102,35 @@ This document describes the step-by-step process followed to design, build and p
 
 ---
 
-## Step 9 — Review & Validation (acceptance tests) ⬜
+## Step 9 — AI-driven Technical & Security Audit ✅
 
-**Goal:** Review the generated code for correctness, readability and security. Run the acceptance tests against the actual implementation.
+**Goal:** Identify weaknesses in the generated codebase — correctness issues, security gaps, robustness problems — before human validation against real data.
 
-**Approach:** Human review of all generated files. Acceptance tests executed manually. Any issues fed back to Claude Code for correction.
+**Approach:** Claude Code performed an autonomous audit of the entire application, reviewing each module from an adversarial perspective. Findings were classified by criticality and addressed in the same session: code, tests and documentation were all updated in a single commit.
+
+**Key findings addressed:**
+- Exception architecture: `sys.exit()` removed from library modules, replaced by typed exceptions propagating up to `main()`
+- HTTP hardening: request timeouts and `requests.Session` reuse
+- API response guard: missing `access_token` key now raises a typed error
+- Markdown injection: pipe characters in activity names escaped in report tables
+- OAuth CSRF: `state` parameter added and verified in `get_refresh_token.py`
+- OAuth UX: authorization timeout and port-in-use error handling
+- Supply chain: third-party GitHub Action pinned to a commit SHA
+- Dependency split: runtime vs. dev dependencies separated
+
+See [`docs/ai-transparency.md`](./ai-transparency.md) for the full write-up.
 
 ---
 
-## Step 10 — Publication & Open Source Release ⬜
+## Step 10 — Review & Validation (acceptance tests) ✅
+
+**Goal:** Review the generated code for correctness, readability and security. Run the acceptance tests against the actual implementation.
+
+**Approach:** Human review of all generated files. Acceptance tests executed manually against a real Strava account. Any issues fed back to Claude Code for correction.
+
+---
+
+## Step 11 — Publication & Open Source Release ⬜
 
 **Goal:** Make the project publicly available and discoverable.
 
