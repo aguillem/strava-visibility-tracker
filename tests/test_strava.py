@@ -243,3 +243,15 @@ class TestHasPersonalRecord:
 
     def test_returns_false_when_pr_rank_is_not_1(self):
         assert _has_personal_record(_detail_stub(segment_efforts=[_segment(pr_rank=2)])) is False
+
+    def test_returns_true_when_segment_has_leaderboard_achievement(self):
+        effort = {"pr_rank": None, "achievements": [{"type_id": 2, "type": "overall", "rank": 5}]}
+        assert _has_personal_record({"segment_efforts": [effort]}) is True
+
+    def test_returns_false_when_segment_has_only_pr_achievement_not_rank_1(self):
+        effort = {"pr_rank": 2, "achievements": [{"type_id": 3, "type": "pr", "rank": 2}]}
+        assert _has_personal_record({"segment_efforts": [effort]}) is False
+
+    def test_returns_false_when_achievements_empty_and_no_pr(self):
+        effort = {"pr_rank": None, "achievements": []}
+        assert _has_personal_record({"segment_efforts": [effort]}) is False

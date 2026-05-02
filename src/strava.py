@@ -188,8 +188,13 @@ def _fetch_activity_detail(access_token: str, activity_id: int) -> dict:
 
 def _has_personal_record(activity_detail: dict) -> bool:
     """
-    Return True if the activity contains at least one segment effort with pr_rank = 1.
+    Return True if the activity has at least one segment effort with pr_rank = 1
+    (current personal best) or a global leaderboard ranking (achievement type_id = 2).
 
     Returns False if the activity has no segment efforts.
     """
-    return any(effort.get("pr_rank") == 1 for effort in activity_detail.get("segment_efforts", []))
+    return any(
+        effort.get("pr_rank") == 1
+        or any(a.get("type_id") == 2 for a in effort.get("achievements", []))
+        for effort in activity_detail.get("segment_efforts", [])
+    )

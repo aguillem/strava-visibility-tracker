@@ -8,6 +8,7 @@ and generates a Markdown report listing activities that should be reviewed.
 """
 
 import logging
+import os
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -51,8 +52,9 @@ def main() -> None:
     5. Generate and write the report
     6. Print summary to console
     """
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     logging.basicConfig(
-        level=logging.INFO,
+        level=getattr(logging, log_level, logging.INFO),
         format="%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )

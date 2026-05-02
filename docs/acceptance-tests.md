@@ -67,6 +67,46 @@ Each test follows this structure:
 
 ---
 
+### AT-01-12 — Activity with a global leaderboard ranking and public visibility is not reported
+
+**Given** an activity with:
+- visibility: `everyone`
+- no segment effort with `pr_rank = 1`
+- at least one segment effort with an achievement of `type_id = 2` (global leaderboard ranking)
+
+**When** the script runs
+
+**Then** the activity does **not** appear in the report (the leaderboard ranking justifies being public)
+
+---
+
+### AT-01-13 — Activity with a previous PR (pr_rank ≥ 2) and public visibility is reported as Case B
+
+**Given** an activity with:
+- visibility: `everyone`
+- segment efforts with `pr_rank = 2` or higher (personal best beaten since)
+- no segment effort with `pr_rank = 1`
+- no global leaderboard achievement (`type_id = 2`)
+
+**When** the script runs
+
+**Then** the activity appears in the report under **Case B — Should be FOLLOWERS ONLY**
+
+---
+
+### AT-01-14 — First-time segment with no leaderboard ranking appears as Case B (known limitation)
+
+**Given** an activity with:
+- visibility: `everyone`
+- no segment effort with `pr_rank = 1`
+- no achievements on any segment effort
+
+**When** the script runs
+
+**Then** the activity appears in the report under **Case B**, even if it was the first time doing the segment — this is a known limitation of the Strava API
+
+---
+
 ### AT-01-5 — Activity with no PR and followers_only visibility is not reported
 
 **Given** an activity with:

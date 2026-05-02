@@ -21,6 +21,10 @@ on:
         description: 'Activity types filter, comma-separated (e.g. Run,TrailRun). Leave empty for all types.'
         required: false
         default: ''
+      log_level:
+        description: 'Log level (DEBUG, INFO). Use DEBUG to inspect raw segment data.'
+        required: false
+        default: ''
 
 jobs:
   run:
@@ -44,11 +48,13 @@ jobs:
           INPUT_DATE_FROM: ${{ github.event.inputs.date_from || vars.DATE_FROM }}
           INPUT_DATE_TO: ${{ github.event.inputs.date_to || vars.DATE_TO }}
           INPUT_ACTIVITY_TYPES: ${{ github.event.inputs.activity_types || vars.ACTIVITY_TYPES }}
+          INPUT_LOG_LEVEL: ${{ github.event.inputs.log_level }}
         run: |
           [ -n "$INPUT_MODE" ] && export MODE="$INPUT_MODE"
           [ -n "$INPUT_DATE_FROM" ] && export DATE_FROM="$INPUT_DATE_FROM"
           [ -n "$INPUT_DATE_TO" ] && export DATE_TO="$INPUT_DATE_TO"
           [ -n "$INPUT_ACTIVITY_TYPES" ] && export ACTIVITY_TYPES="$INPUT_ACTIVITY_TYPES"
+          [ -n "$INPUT_LOG_LEVEL" ] && export LOG_LEVEL="$INPUT_LOG_LEVEL"
           python src/main.py
 
       - name: Publish report to summary

@@ -17,15 +17,18 @@ The problem is that managing activity visibility manually is tedious and error-p
 The rules are simple:
 
 - 🏆 Activity with a **segment PR** → should be **public**
+- 🌍 Activity with a **global leaderboard ranking** on a segment → should be **public**
 - 🏅 Activity tagged as a **race** → should be **public**
-- 🙈 Activity with **no segment PR and not a race** → should be **followers only**
+- 🙈 Activity with none of the above → should be **followers only**
 
 The tool detects two types of inconsistencies:
 
 | Case | Situation | What to do |
 |------|-----------|------------|
 | A | Activity is `followers only` or `only me`, but has a PR | Set it to **public** |
-| B | Activity is `everyone`, has no PR, and is not a race | Set it to **followers only** |
+| B | Activity is `everyone`, has no PR, no leaderboard ranking, and is not a race | Set it to **followers only** |
+
+> ⚠️ **Known limitation** — When doing a segment for the first time without achieving a global leaderboard ranking, the Strava API provides no signal to distinguish this activity from a regular non-notable one. These activities may appear as false positives in Case B and require manual review.
 
 ---
 
