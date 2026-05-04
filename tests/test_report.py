@@ -107,6 +107,19 @@ class TestGenerateReport:
         report = generate_report(_report_data(hidden_prs=[activity]))
         assert r"Run \| Race" in report
 
+    def test_footer_contains_run_url_when_provided(self):
+        report = generate_report(
+            _report_data(
+                run_url="https://github.com/aguillem/strava-visibility-tracker/actions/runs/123"
+            )
+        )
+        assert "actions/runs/123" in report
+
+    def test_footer_contains_repo_link_when_no_run_url(self):
+        report = generate_report(_report_data(run_url=None))
+        assert "github.com/aguillem/strava-visibility-tracker" in report
+        assert "Generated locally" in report
+
 
 class TestWriteReport:
     """Tests for write_report()."""

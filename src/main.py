@@ -89,6 +89,15 @@ def main() -> None:
     hidden_prs = find_hidden_prs(activities)
     logger.info("Hidden PRs found: %d", len(hidden_prs))
 
+    server_url = os.getenv("GITHUB_SERVER_URL")
+    repository = os.getenv("GITHUB_REPOSITORY")
+    run_id = os.getenv("GITHUB_RUN_ID")
+    run_url = (
+        f"{server_url}/{repository}/actions/runs/{run_id}"
+        if server_url and repository and run_id
+        else None
+    )
+
     now = datetime.now()
     data = ReportData(
         generated_at=now,
@@ -99,6 +108,7 @@ def main() -> None:
         scanned_count=len(activities),
         hidden_prs=hidden_prs,
         is_partial=is_partial,
+        run_url=run_url,
     )
 
     content = generate_report(data)
