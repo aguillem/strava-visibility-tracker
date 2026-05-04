@@ -1,4 +1,4 @@
-# 🚴 Strava Visibility Checker
+# 🚴 Strava Visibility Tracker
 
 ![CI](https://github.com/aguillem/strava-visibility-tracker/actions/workflows/ci.yml/badge.svg)
 
@@ -6,7 +6,7 @@ We all face the same eternal struggle: we want to protect our privacy, yet we de
 
 The problem is that managing activity visibility manually is tedious and error-prone. Segments get created after the fact, PRs get beaten, and suddenly your old heroic activities are buried on private while your mediocre ones are proudly displayed to the public.
 
-**Strava Visibility Checker** scans your activities, detects visibility inconsistencies based on your segment personal records, and tells you exactly what to fix.
+**Strava Visibility Tracker** scans your activities, detects visibility inconsistencies based on your segment personal records, and tells you exactly what to fix.
 
 > ⚠️ The Strava API does not allow programmatic updates to activity visibility. This tool produces a report — the final click is yours.
 

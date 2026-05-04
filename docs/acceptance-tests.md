@@ -2,7 +2,7 @@
 
 > 🤖 **AI Transparency Notice:** This document was written with AI assistance (Claude by Anthropic). The decisions, requirements and validations are human-driven; the drafting and structuring were AI-assisted. See [AI Transparency](./ai-transparency.md) for details.
 
-This document defines the acceptance test scenarios for the Strava Activity Visibility Checker. Each scenario describes a concrete situation, the inputs provided, and the exact expected behaviour. These scenarios serve as the contract between the functional specification and the implementation.
+This document defines the acceptance test scenarios for the Strava Visibility Tracker. Each scenario describes a concrete situation, the inputs provided, and the exact expected behaviour. These scenarios serve as the contract between the functional specification and the implementation.
 
 ---
 

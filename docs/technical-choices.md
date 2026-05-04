@@ -2,7 +2,7 @@
 
 > 🤖 **AI Transparency Notice:** This document was written with AI assistance (Claude by Anthropic). The decisions, requirements and validations are human-driven; the drafting and structuring were AI-assisted. See [AI Transparency](./ai-transparency.md) for details.
 
-This document defines the technology stack, project structure, dependencies and coding standards for the Strava Activity Visibility Checker.
+This document defines the technology stack, project structure, dependencies and coding standards for the Strava Visibility Tracker.
 
 ---
 

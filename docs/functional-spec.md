@@ -1,4 +1,4 @@
-# Strava Activity Visibility Checker — Functional Specifications
+# Strava Visibility Tracker — Functional Specifications
 
 > 🤖 **AI Transparency Notice:** This document was written with AI assistance (Claude by Anthropic). The decisions, requirements and validations are human-driven; the drafting and structuring were AI-assisted. See [AI Transparency](./ai-transparency.md) for details.
 
